@@ -79,7 +79,7 @@ $result = $conn->query($sql);
                             echo "<td>" . $row['customerID'] . "</td>"; // Assuming customerID is the primary key
                             echo "<td>" . htmlspecialchars($row['customerName']) . "</td>";
                             echo "<td>" . htmlspecialchars($row['customerEmail']) . "</td>";
-                            echo "<td>" . htmlspecialchars($row['customerPhone']) . "</td>";
+                            echo "<td>" . htmlspecialchars($row['customerPhoneNumber']) . "</td>";
                             echo "<td>
                     <a href='edit_customer.php?id=" . $row['customerID'] . "' class='btn btn-sm btn-warning'>Edit</a>
                     <a href='delete_customer.php?id=" . $row['customerID'] . "' class='btn btn-sm btn-danger' onclick='return confirm(\"Are you sure you want to delete this customer?\")'>Delete</a>
