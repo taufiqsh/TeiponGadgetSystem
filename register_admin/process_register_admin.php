@@ -1,18 +1,7 @@
 <?php
 session_start();
 
-// Database connection
-$servername = "localhost";
-$username = "root";
-$password = "root";
-$dbname = "teipon_gadget";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Capture form data
@@ -54,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bind_param("ssss", $adminName, $adminUsername, $hashedPassword, $adminEmail);
 
     if ($stmt->execute()) {
-        header("Location: admin_login.php?success=Registration successful. Please login.");
+        header("Location: ../admin_login/admin_login.php?success=Registration successful. Please login.");
         exit();
     } else {
         $error = "Error: " . $stmt->error;

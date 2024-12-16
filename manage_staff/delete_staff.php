@@ -8,19 +8,7 @@ if (!isset($_SESSION['adminID']) || !isset($_SESSION['adminName'])) {
     exit();
 }
 
-// Database connection
-$servername = "localhost";
-$username = "root";
-$password = "root";
-$dbname = "teipon_gadget";
-
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
 // Get the staff ID from the URL
 if (isset($_GET['id'])) {

@@ -1,19 +1,8 @@
 <?php
-// Database connection details
-$servername = "localhost";
-$username = "root"; // Default username for local MySQL
-$password = "root"; // Default password for local MySQL
-$dbname = "teipon_gadget"; // Replace with your database name
 
-// Create connection
-$conn = new mysqli($servername, $username, $password);
+require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
 
-// Create the new database
 $sqlCreateDB = "CREATE DATABASE IF NOT EXISTS $dbname";
 if ($conn->query($sqlCreateDB) === TRUE) {
     echo "Database '$dbname' created successfully!<br>";
@@ -25,18 +14,20 @@ $conn->select_db($dbname);
 
 // Array of SQL queries to create tables with table names
 $tables = [
-    "Staff" => "CREATE TABLE IF NOT EXISTS Staff (
+    "staff" => "CREATE TABLE IF NOT EXISTS staff (
         staffID INT AUTO_INCREMENT PRIMARY KEY,
         staffName VARCHAR(255) NOT NULL,
+        staffUsername VARCHAR(255) NOT NULL,
         staffEmail VARCHAR(255) NOT NULL UNIQUE,
         staffPassword VARCHAR(255) NOT NULL,
         adminID INT,
-        FOREIGN KEY (adminID) REFERENCES Staff(staffID) ON DELETE SET NULL
+        FOREIGN KEY (adminID) REFERENCES staff(staffID) ON DELETE SET NULL
     )",
-    "Customer" => "CREATE TABLE IF NOT EXISTS Customer (
+    "customer" => "CREATE TABLE IF NOT EXISTS customer (
         customerID INT AUTO_INCREMENT PRIMARY KEY,
         customerName VARCHAR(255) NOT NULL,
         customerUsername VARCHAR(255) NOT NULL,
+        customerPhoneNumber VARCHAR(255) NOT NULL,
         customerEmail VARCHAR(255) NOT NULL UNIQUE,
         customerPassword VARCHAR(255) NOT NULL,
         customerState VARCHAR(255) NOT NULL,
@@ -44,34 +35,55 @@ $tables = [
         customerCity VARCHAR(255) NOT NULL,
         customerAddress VARCHAR(255) NOT NULL,
         staffID INT,
-        FOREIGN KEY (staffID) REFERENCES Staff(staffID) ON DELETE SET NULL
+        FOREIGN KEY (staffID) REFERENCES staff(staffID) ON DELETE SET NULL
     )",
-    "Order" => "CREATE TABLE IF NOT EXISTS `Order` (
+    "orders" => "CREATE TABLE IF NOT EXISTS `orders` (
         orderID INT AUTO_INCREMENT PRIMARY KEY,
         orderDetails VARCHAR(255),
         orderDate DATE NOT NULL,
+        totalAmount DECIMAL(10,2) NOT NULL,
+        orderStatus VARCHAR(50) NOT NULL,
         customerID INT NOT NULL,
-        FOREIGN KEY (customerID) REFERENCES Customer(customerID) ON DELETE CASCADE
+        FOREIGN KEY (customerID) REFERENCES customer(customerID) ON DELETE CASCADE
     )",
-    "Item" => "CREATE TABLE IF NOT EXISTS Item (
-        itemID INT AUTO_INCREMENT PRIMARY KEY,
-        itemName VARCHAR(255) NOT NULL,
-        itemDescription VARCHAR(255),
-        itemImage BLOB,
-        itemCreatedDate DATE NOT NULL,
+    "product" => "CREATE TABLE IF NOT EXISTS product (
+        productID INT AUTO_INCREMENT PRIMARY KEY,
+        productName VARCHAR(255) NOT NULL,
+        productDescription TEXT,
+        productPrice DECIMAL(10, 2) NOT NULL,
+        productStock INT NOT NULL,
+        productImage VARCHAR(255) NOT NULL,
+        productCreatedDate DATETIME NOT NULL,
         staffID INT,
-        orderID INT,
-        FOREIGN KEY (staffID) REFERENCES Staff(staffID) ON DELETE SET NULL,
-        FOREIGN KEY (orderID) REFERENCES `Order`(orderID) ON DELETE SET NULL
+        FOREIGN KEY (staffID) REFERENCES staff(staffID)
     )",
-    "Payment" => "CREATE TABLE IF NOT EXISTS Payment (
+    "payment" => "CREATE TABLE IF NOT EXISTS payment (
         paymentID INT AUTO_INCREMENT PRIMARY KEY,
         paymentStatus VARCHAR(255) NOT NULL,
         paymentDate DATE NOT NULL,
         orderID INT NOT NULL,
         staffID INT,
-        FOREIGN KEY (orderID) REFERENCES `Order`(orderID) ON DELETE CASCADE,
-        FOREIGN KEY (staffID) REFERENCES Staff(staffID) ON DELETE SET NULL
+        FOREIGN KEY (orderID) REFERENCES `orders`(orderID) ON DELETE CASCADE,
+        FOREIGN KEY (staffID) REFERENCES staff(staffID) ON DELETE SET NULL
+    )",
+    "orderProducts" => "CREATE TABLE IF NOT EXISTS orderProducts (
+        orderProductId INT AUTO_INCREMENT PRIMARY KEY,
+        orderID INT NOT NULL,
+        productID INT NOT NULL,
+        quantity INT NOT NULL,
+        price DECIMAL(10, 2) NOT NULL,
+        totalPrice DECIMAL(10, 2) NOT NULL,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (orderID) REFERENCES `orders`(orderID) ON DELETE CASCADE,
+        FOREIGN KEY (productID) REFERENCES product(productID) ON DELETE CASCADE
+    )",
+    "admin" => "CREATE TABLE IF NOT EXISTS admin (
+        adminID INT AUTO_INCREMENT PRIMARY KEY,
+        adminName VARCHAR(255) NOT NULL,
+        adminEmail VARCHAR(255) NOT NULL UNIQUE,
+        adminUsername VARCHAR(255) NOT NULL UNIQUE,
+        adminPassword VARCHAR(255) NOT NULL
     )"
 ];
 

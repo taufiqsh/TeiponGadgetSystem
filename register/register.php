@@ -6,13 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Register</title>
   <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
   <link href="../global.css" rel="stylesheet">
 
 </head>
 
 <body class="bg-light">
-<?php include('../navbar/navbar.php'); ?>
+  <?php include('../navbar/navbar.php'); ?>
   <div class="container d-flex justify-content-center align-items-center min-vh-100">
     <div class="card shadow-sm p-4" style="width: 100%; max-width: 500px;">
       <h2 class="text-center mb-4">Register</h2>
@@ -25,7 +25,7 @@
           <div class="error-message" id="emailError"></div>
         </div>
 
-        
+
         <div class="mb-3">
           <label for="name" class="form-label">Name</label>
           <input type="text" class="form-control" id="name" name="name" placeholder="Enter your name" required>
@@ -99,8 +99,8 @@
       </div>
     </div>
   </div>
-    <!-- JavaScript Validation -->
-    <script>
+  <!-- JavaScript Validation -->
+  <script>
     function validateForm() {
       // Get form fields
       const email = document.getElementById('email');
@@ -178,7 +178,7 @@
   </script>
 
   <!-- Bootstrap JS Bundle -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

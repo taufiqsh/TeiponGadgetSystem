@@ -10,19 +10,7 @@ if (!isset($_SESSION['adminID']) || !isset($_SESSION['adminName'])) {
 
 $adminName = $_SESSION['adminName']; // Get the admin's name from the session
 
-// Database connection
-$servername = "localhost";
-$username = "root";
-$password = "root";
-$dbname = "teipon_gadget";
-
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
 // Fetch all staff from the Staff table
 $sql = "SELECT * FROM Staff";
@@ -36,7 +24,7 @@ $result = $conn->query($sql);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Staff</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -46,7 +34,7 @@ $result = $conn->query($sql);
 
 <body>
     <!-- Sidebar -->
-    <?php include('../admin_sidebar/sidebar.php'); ?>
+    <?php include('../sidebar/admin_sidebar.php'); ?>
 
     <!-- Main Content -->
     <div class="main-content">
@@ -95,7 +83,7 @@ $result = $conn->query($sql);
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

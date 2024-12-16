@@ -1,4 +1,5 @@
 <?php
+session_start();
 // Database connection details
 $servername = "localhost";
 $username = "root"; // Default username for local MySQL
@@ -22,7 +23,12 @@ if ($user === 'isadmin' && $pass === 'isadmin') {
     // Redirect to admin login page
     header("Location: ../admin_login/admin_login.php");
     exit();
+} else if ($user ==='isstaff' && $pass === 'isstaff'){
+    header("Location: ../staff_login/staff_login.php");
+    exit();
 }
+
+
 
 // Prepare SQL query to fetch regular user data
 $sql = "SELECT * FROM customer WHERE customerUsername = ?";
@@ -40,11 +46,10 @@ if ($result->num_rows > 0) {
     if (password_verify($pass, $row['customerPassword'])) {
         // Start session and store user data
         session_start();
-        $_SESSION['user_id'] = $row['customerID'];
-        $_SESSION['username'] = $row['customerUsername'];
+        $_SESSION['customerID'] = $row['customerID'];
+        $_SESSION['customerUsername'] = $row['customerUsername'];
         
-        // Redirect to the dashboard or another page after successful login
-        header("Location: dashboard.php");
+        header("Location: ../customer/customer_home.php");
         exit();
     } else {
         // Redirect back to login page with an error message

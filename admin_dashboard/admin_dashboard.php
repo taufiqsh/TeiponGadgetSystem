@@ -3,25 +3,15 @@ session_start(); // Start session
 
 // Check if the admin is logged in
 if (!isset($_SESSION['adminID']) || !isset($_SESSION['adminName'])) {
-    // Redirect to the login page if not logged in
-    header("Location: ../admin_login/admin_login.php?error=Please login to access the dashboard");
-    exit();
+  // Redirect to the login page if not logged in
+  header("Location: ../admin_login/admin_login.php?error=Please login to access the dashboard");
+  exit();
 }
 
 $adminName = $_SESSION['adminName']; // Get the admin's name from the session
 
-// Database connection
-$servername = "localhost";
-$username = "root";
-$password = "root";
-$dbname = "teipon_gadget"; // Change to your database name
+require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
 
 // Query to get the total number of staff
 $staffQuery = "SELECT COUNT(*) AS total_staff FROM staff";
@@ -39,20 +29,22 @@ $conn->close();
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
       font-family: Arial, sans-serif;
     }
   </style>
 </head>
+
 <body>
   <!-- Include Sidebar -->
-  <?php include('../admin_sidebar/sidebar.php'); ?>
+  <?php include('../sidebar/admin_sidebar.php'); ?>
 
   <!-- Main Content -->
   <div class="main-content">
@@ -122,6 +114,8 @@ $conn->close();
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/bootstrap.bundle.min.js"></script>
 </body>
+</body>
+
 </html>
