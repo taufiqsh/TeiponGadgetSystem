@@ -1,21 +1,22 @@
 <?php
 session_start(); // Start session
 
-// Check if admin or staff is logged in
-if (!(isset($_SESSION['adminID']) || isset($_SESSION['staffID']))) {
-    // Redirect to the login page if neither is logged in
+// Ensure staffID exists in the session
+if (!isset($_SESSION['userID'])) {
+    // Redirect to login page if staffID is not set
     header("Location: ../login/login.php?error=Please login to access the dashboard");
     exit();
 }
 
-// Determine user type and session details
-if (isset($_SESSION['adminID'])) {
+if(isset($_SESSION['adminID'])) {
+    $adminID = $_SESSION['adminID'];
     $userType = 'Admin';
-    $userName = $_SESSION['adminName'];
-} else if (isset($_SESSION['staffID'])) {
+} else{
     $userType = 'Staff';
-    $userName = $_SESSION['staffUsername'];
 }
+
+// Since staffUsername is always set during login, use it directly
+$userName = $_SESSION['username'];
 
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
@@ -23,6 +24,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.p
 $sql = "SELECT customerID, customerName, customerEmail, customerPhoneNumber, customerState, customerPostalCode, customerCity, customerAddress FROM Customer";
 $result = $conn->query($sql);
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -69,7 +71,7 @@ $result = $conn->query($sql);
     <?php
     if ($userType === 'Admin') {
         include('../sidebar/admin_sidebar.php');
-    } elseif ($userType === 'Staff') {
+    } else if ($userType === 'Staff') {
         include('../sidebar/staff_sidebar.php');
     }
     ?>

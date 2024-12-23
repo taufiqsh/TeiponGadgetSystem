@@ -1,8 +1,8 @@
 <?php
 
-require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_creation_config.php');
 
-
+// Create database
 $sqlCreateDB = "CREATE DATABASE IF NOT EXISTS $dbname";
 if ($conn->query($sqlCreateDB) === TRUE) {
     echo "Database '$dbname' created successfully!<br>";
@@ -12,21 +12,21 @@ if ($conn->query($sqlCreateDB) === TRUE) {
 
 $conn->select_db($dbname);
 
-// Array of SQL queries to create tables with table names
+// Array of SQL queries to create tables with the recursive relationship in staff
 $tables = [
     "staff" => "CREATE TABLE IF NOT EXISTS staff (
         staffID INT AUTO_INCREMENT PRIMARY KEY,
         staffName VARCHAR(255) NOT NULL,
-        staffUsername VARCHAR(255) NOT NULL,
+        staffUsername VARCHAR(255) NOT NULL UNIQUE,
         staffEmail VARCHAR(255) NOT NULL UNIQUE,
         staffPassword VARCHAR(255) NOT NULL,
-        adminID INT,
+        adminID INT DEFAULT NULL,
         FOREIGN KEY (adminID) REFERENCES staff(staffID) ON DELETE SET NULL
     )",
     "customer" => "CREATE TABLE IF NOT EXISTS customer (
         customerID INT AUTO_INCREMENT PRIMARY KEY,
         customerName VARCHAR(255) NOT NULL,
-        customerUsername VARCHAR(255) NOT NULL,
+        customerUsername VARCHAR(255) NOT NULL UNIQUE,
         customerPhoneNumber VARCHAR(255) NOT NULL,
         customerEmail VARCHAR(255) NOT NULL UNIQUE,
         customerPassword VARCHAR(255) NOT NULL,
@@ -44,7 +44,8 @@ $tables = [
         totalAmount DECIMAL(10,2) NOT NULL,
         orderStatus VARCHAR(50) NOT NULL,
         customerID INT NOT NULL,
-        FOREIGN KEY (customerID) REFERENCES customer(customerID) ON DELETE CASCADE
+            FOREIGN KEY (customerID) REFERENCES customer(customerID) ON DELETE CASCADE,
+    FOREIGN KEY (staffID) REFERENCES staff(staffID) ON DELETE SET NULL
     )",
     "product" => "CREATE TABLE IF NOT EXISTS product (
         productID INT AUTO_INCREMENT PRIMARY KEY,
@@ -55,7 +56,7 @@ $tables = [
         productImage VARCHAR(255) NOT NULL,
         productCreatedDate DATETIME NOT NULL,
         staffID INT,
-        FOREIGN KEY (staffID) REFERENCES staff(staffID)
+        FOREIGN KEY (staffID) REFERENCES staff(staffID) ON DELETE SET NULL
     )",
     "payment" => "CREATE TABLE IF NOT EXISTS payment (
         paymentID INT AUTO_INCREMENT PRIMARY KEY,
@@ -77,17 +78,10 @@ $tables = [
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (orderID) REFERENCES `orders`(orderID) ON DELETE CASCADE,
         FOREIGN KEY (productID) REFERENCES product(productID) ON DELETE CASCADE
-    )",
-    "admin" => "CREATE TABLE IF NOT EXISTS admin (
-        adminID INT AUTO_INCREMENT PRIMARY KEY,
-        adminName VARCHAR(255) NOT NULL,
-        adminEmail VARCHAR(255) NOT NULL UNIQUE,
-        adminUsername VARCHAR(255) NOT NULL UNIQUE,
-        adminPassword VARCHAR(255) NOT NULL
     )"
 ];
 
-// Execute each query to create the tables and echo the table name
+// Execute each query
 foreach ($tables as $tableName => $sql) {
     if ($conn->query($sql) === TRUE) {
         echo "Table '$tableName' created successfully!<br>";

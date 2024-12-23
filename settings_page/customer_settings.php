@@ -1,7 +1,6 @@
 <?php
 session_start(); // Start session
 
-
 // Check if the customer is logged in
 if (!isset($_SESSION['customerID']) || !isset($_SESSION['customerUsername'])) {
     header("Location: ../login/login.php?error=" . urlencode("Please login to access the settings"));
@@ -15,7 +14,7 @@ $customerUsername = $_SESSION['customerUsername'];
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
 // Fetch customer data from the database
-$sql = "SELECT customerName, customerEmail, customerUsername FROM Customer WHERE customerID = ?";
+$sql = "SELECT customerName, customerEmail, customerUsername, customerPhoneNumber, customerState, customerPostalCode, customerCity, customerAddress FROM Customer WHERE customerID = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $customerID);
 $stmt->execute();
@@ -32,17 +31,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $newName = $_POST['name'];
     $newEmail = $_POST['email'];
     $newUsername = $_POST['username'];
+    $newPhoneNumber = $_POST['phoneNumber'];
+    $newState = $_POST['state'];
+    $newPostalCode = $_POST['postalCode'];
+    $newCity = $_POST['city'];
+    $newAddress = $_POST['address'];
     $newPassword = !empty($_POST['password']) ? password_hash($_POST['password'], PASSWORD_DEFAULT) : null;
 
     // Update customer details in the database
     if ($newPassword) {
-        $updateSql = "UPDATE Customer SET customerName = ?, customerEmail = ?, customerUsername = ?, customerPassword = ? WHERE customerID = ?";
+        $updateSql = "UPDATE Customer SET customerName = ?, customerEmail = ?, customerUsername = ?, customerPhoneNumber = ?, customerState = ?, customerPostalCode = ?, customerCity = ?, customerAddress = ?, customerPassword = ? WHERE customerID = ?";
         $updateStmt = $conn->prepare($updateSql);
-        $updateStmt->bind_param("ssssi", $newName, $newEmail, $newUsername, $newPassword, $customerID);
+        $updateStmt->bind_param("sssssssssi", $newName, $newEmail, $newUsername, $newPhoneNumber, $newState, $newPostalCode, $newCity, $newAddress, $newPassword, $customerID);
     } else {
-        $updateSql = "UPDATE Customer SET customerName = ?, customerEmail = ?, customerUsername = ? WHERE customerID = ?";
+        $updateSql = "UPDATE Customer SET customerName = ?, customerEmail = ?, customerUsername = ?, customerPhoneNumber = ?, customerState = ?, customerPostalCode = ?, customerCity = ?, customerAddress = ? WHERE customerID = ?";
         $updateStmt = $conn->prepare($updateSql);
-        $updateStmt->bind_param("sssi", $newName, $newEmail, $newUsername, $customerID);
+        $updateStmt->bind_param("ssssssssi", $newName, $newEmail, $newUsername, $newPhoneNumber, $newState, $newPostalCode, $newCity, $newAddress, $customerID);
     }
 
     if ($updateStmt->execute()) {
@@ -94,6 +98,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <div class="mb-3">
                     <label for="username" class="form-label">Username</label>
                     <input type="text" class="form-control" id="username" name="username" value="<?php echo htmlspecialchars($customer['customerUsername']); ?>" required>
+                </div>
+                <div class="mb-3">
+                    <label for="phoneNumber" class="form-label">Phone Number</label>
+                    <input type="text" class="form-control" id="phoneNumber" name="phoneNumber" value="<?php echo htmlspecialchars($customer['customerPhoneNumber']); ?>" required>
+                </div>
+                <div class="mb-3">
+                    <label for="state" class="form-label">State</label>
+                    <input type="text" class="form-control" id="state" name="state" value="<?php echo htmlspecialchars($customer['customerState']); ?>" required>
+                </div>
+                <div class="mb-3">
+                    <label for="postalCode" class="form-label">Postal Code</label>
+                    <input type="text" class="form-control" id="postalCode" name="postalCode" value="<?php echo htmlspecialchars($customer['customerPostalCode']); ?>" required>
+                </div>
+                <div class="mb-3">
+                    <label for="city" class="form-label">City</label>
+                    <input type="text" class="form-control" id="city" name="city" value="<?php echo htmlspecialchars($customer['customerCity']); ?>" required>
+                </div>
+                <div class="mb-3">
+                    <label for="address" class="form-label">Address</label>
+                    <input type="text" class="form-control" id="address" name="address" value="<?php echo htmlspecialchars($customer['customerAddress']); ?>" required>
                 </div>
                 <div class="mb-3">
                     <label for="password" class="form-label">New Password (optional)</label>

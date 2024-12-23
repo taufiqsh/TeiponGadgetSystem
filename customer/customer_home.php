@@ -1,15 +1,14 @@
 <?php
 session_start();
-
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
-
-
 // Check if the user is logged in
-if (!isset($_SESSION['customerUsername'])) {
-    header('Location: login.php'); // Redirect to login if not logged in
+if (!isset($_SESSION['username'])) {
+    header('Location: login.php');
     exit();
 }
+
+$userID = $_SESSION['userID'];
 
 // Fetch all products from the database
 $sql = "SELECT productID, productName, productDescription, productPrice, productImage FROM Product";
@@ -24,86 +23,50 @@ $result = $conn->query($sql);
     <title>Customer Home</title>
     <link href="assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        .product-image {
-            width: 100%;
-            /* Ensures the image fills the parent container */
-            height: 200px;
-            /* Set a consistent height */
-            object-fit: cover;
-            /* Ensures the image maintains its aspect ratio and fills the size */
-            border-radius: 5px;
-            /* Optional: Adds a slight curve to the corners */
-            border: 1px solid #ddd;
-            /* Optional: Adds a border for a clean look */
-        }
-    </style>
 </head>
 
 <body>
-
     <?php include('../navbar/customer_navbar.php'); ?>
 
     <!-- Hero Section -->
     <section class="bg-dark text-white text-center py-5">
         <div class="container">
-            <h1 class="display-4">Welcome, <?php echo htmlspecialchars($_SESSION['customerUsername']); ?>!</h1>
+            <h1 class="display-4">Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h1>
         </div>
     </section>
 
-    <!-- Main Content -->
+    <!-- Product Display -->
     <div class="container my-5">
         <div class="row" id="productContainer">
             <?php
             if ($result->num_rows > 0) {
-                $products = [];
                 while ($row = $result->fetch_assoc()) {
-                    $productName = !empty($row['productName']) ? htmlspecialchars($row['productName']) : 'Unnamed Product';
-                    $productDescription = !empty($row['productDescription']) ? htmlspecialchars($row['productDescription']) : 'No description available.';
-                    $productPrice = !empty($row['productPrice']) ? $row['productPrice'] : 0.00; // Keep raw value if not empty
-                    $productImage = !empty($row['productImage']) ? htmlspecialchars($row['productImage']) : 'placeholder.jpg';
+                    $productName = htmlspecialchars($row['productName']);
+                    $productDescription = htmlspecialchars($row['productDescription']);
+                    $productPrice = $row['productPrice'];
+                    $productImage = htmlspecialchars($row['productImage']);
 
-                    $products[] = [
-                        'id' => $row['productID'], // Add productID to the array
-                        'name' => $productName,
-                        'description' => $productDescription,
-                        'price' => $productPrice,
-                        'image' => $productImage
-                    ];
-                }
-
-                // Display products in columns
-                foreach ($products as $product) {
                     echo '
-        <div class="col-md-3 col-sm-4 product-item">
-            <div class="text-center">
-                <img src="../uploads/' . $product['image'] . '" 
-                     alt="' . $product['name'] . '" 
-                     class="img-fluid product-image mb-3">
-                <h5>' . $product['name'] . '</h5>
-                <p>' . $product['description'] . '</p>
-                <p class="fw-bold">Price: RM ' . $product['price'] . '</p>
-                <button class="btn btn-outline-primary" 
-                        onclick="addToCart(' . $product['id'] . ', \'' . addslashes($product['name']) . '\', ' . $product['price'] . ', \'' . addslashes($product['image']) . '\')">
-                    Buy
-                </button>
-            </div>
-        </div>';
+                    <div class="col-md-3 col-sm-4 product-item">
+                        <div class="text-center">
+                            <img src="../uploads/' . $productImage . '" alt="' . $productName . '" class="img-fluid product-image mb-3">
+                            <h5>' . $productName . '</h5>
+                            <p>' . $productDescription . '</p>
+                            <p class="fw-bold">Price: RM ' . number_format($productPrice, 2) . '</p>
+                            <button class="btn btn-outline-primary" onclick="addToCart(' . $row['productID'] . ', \'' . addslashes($productName) . '\', ' . $productPrice . ', \'' . addslashes($productImage) . '\')">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>';
                 }
             } else {
                 echo '<p class="text-center">No products available at the moment.</p>';
             }
             ?>
-
-        </div>
-
-        <!-- Navigation buttons -->
-        <div class="d-flex justify-content-center gap-4">
-            <button id="prevBtn" class="btn btn-secondary" onclick="navigate(-1)">Previous</button>
-            <button id="nextBtn" class="btn btn-secondary" onclick="navigate(1)">Next</button>
         </div>
     </div>
 
+    <!-- Cart Modal -->
     <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -112,9 +75,7 @@ $result = $conn->query($sql);
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div id="cartItems">
-                        <!-- Cart items will be dynamically loaded here -->
-                    </div>
+                    <div id="cartItems"></div>
                     <h5 class="text-end mt-3">Total: RM <span id="cartTotal">0.00</span></h5>
                 </div>
                 <div class="modal-footer">
@@ -125,17 +86,13 @@ $result = $conn->query($sql);
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-light text-center py-4">
-        <p class="mb-0">© Teipon Gadget. All Rights Reserved.</p>
-    </footer>
-
     <script src="assets/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        // Add product to cart
         function addToCart(productID, productName, productPrice, productImage) {
             $.ajax({
-                url: '../cart/add_to_cart.php', // Path to your PHP script
+                url: '../cart/add_to_cart.php',
                 method: 'POST',
                 data: {
                     productID: productID,
@@ -144,22 +101,41 @@ $result = $conn->query($sql);
                     productImage: productImage
                 },
                 success: function(response) {
-                    // Parse the response which contains updated cart count and cart items
                     const responseData = JSON.parse(response);
-
-                    // Update the cart count in the navbar
                     const cartCountElement = document.getElementById('cartCount');
-                    cartCountElement.innerText = responseData.cartCount;
-
-                    // Optionally, update the cart modal if needed
-                    updateCartModal(responseData.cart);
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error adding to cart:", error);
+                    cartCountElement.innerText = responseData.cartCount; // Update cart count
+                    updateCartModal(responseData.cart); // Update the modal with new cart data
                 }
             });
         }
 
+        // Update the cart modal with current cart data
+        function updateCartModal(cart) {
+            var cartItemsHTML = '';
+            var total = 0;
+
+            // Loop through each cart item and display it
+            cart.forEach(function(item) {
+                total += item.price * item.quantity; // Calculate total price
+                cartItemsHTML += `
+                <div class="cart-item d-flex justify-content-between mb-3">
+                    <div class="d-flex">
+                        <img src="../uploads/${item.image}" alt="${item.name}" width="50" class="me-3">
+                        <div>
+                            <span>${item.name} (x${item.quantity})</span><br>
+                            <small>RM ${item.price.toFixed(2)}</small>
+                        </div>
+                    </div>
+                    <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.id})">Remove</button>
+                </div>`;
+            });
+
+            // Update cart content and total
+            $('#cartItems').html(cartItemsHTML);
+            $('#cartTotal').text(total.toFixed(2)); // Update total price
+        }
+
+        // Remove product from cart
         function removeFromCart(productId) {
             $.ajax({
                 url: '../cart/remove_from_cart.php',
@@ -168,43 +144,22 @@ $result = $conn->query($sql);
                     id: productId
                 },
                 success: function(response) {
-                    var data = JSON.parse(response);
-                    updateCart(data.cart); // Update the cart modal
-                    updateCartCount(data.cart); // Update the cart count in the navbar
+                    const responseData = JSON.parse(response);
+                    updateCartModal(responseData.cart); // Update the modal with new cart data
+                    const cartCountElement = document.getElementById('cartCount');
+                    cartCountElement.innerText = responseData.cartCount; // Update cart count
                 }
             });
         }
 
-        function updateCart(cart) {
-            // Update the cart modal content
-            var cartItemsHTML = '';
-            var total = 0;
-            cart.forEach(function(item) {
-                total += item.price * item.quantity;
-                cartItemsHTML += '<p>' + item.name + ' (x' + item.quantity + ') - RM ' + item.price.toFixed(2) + '</p>';
-            });
-            $('#cartItems').html(cartItemsHTML);
-            $('#cartTotal').text(total.toFixed(2));
-        }
-
-        function updateCartCount(cart) {
-            // Update the cart item count in the navbar
-            var totalItems = cart.reduce(function(count, item) {
-                return count + item.quantity;
-            }, 0);
-            $('#cartCount').text(totalItems);
-        }
-
-        // Initial call to update cart count on page load
+        // Initialize the cart modal when the page loads
         $(document).ready(function() {
-            // Get the initial cart state (if any)
             $.ajax({
-                url: '../cart/get_cart.php',
+                url: '../cart/get_cart.php', // You can use this endpoint to retrieve cart data on page load if needed
                 method: 'GET',
                 success: function(response) {
-                    var cart = response.cart || [];
-                    updateCart(cart);
-                    updateCartCount(cart);
+                    const cart = response.cart || [];
+                    updateCartModal(cart); // Populate the modal with current cart items
                 }
             });
         });

@@ -2,19 +2,22 @@
 session_start(); // Start session
 
 // Check if the admin is logged in
-if (!isset($_SESSION['adminID']) || !isset($_SESSION['adminName'])) {
+if (!isset($_SESSION['userID']) || !isset($_SESSION['username'])) {
     // Redirect to the login page if not logged in
     header("Location: ../admin_login/admin_login.php?error=Please login to access the dashboard");
     exit();
 }
-
-$adminName = $_SESSION['adminName']; // Get the admin's name from the session
 
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
 // Fetch all staff from the Staff table
 $sql = "SELECT * FROM Staff";
 $result = $conn->query($sql);
+
+// Check if the query was successful
+if (!$result) {
+    die("Query failed: " . $conn->error);
+}
 ?>
 
 <!DOCTYPE html>
@@ -26,8 +29,33 @@ $result = $conn->query($sql);
     <title>Manage Staff</title>
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        .modal-body {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .modal-footer .btn {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .modal-header {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .modal-content {
+            border-radius: 10px;
+        }
+
+        .btn-danger {
+            background-color: #e53935;
+            border-color: #e53935;
+        }
+
+        .btn-danger:hover {
+            background-color: #d32f2f;
+            border-color: #d32f2f;
         }
     </style>
 </head>
@@ -69,10 +97,32 @@ $result = $conn->query($sql);
                             echo "<td>" . htmlspecialchars($row['staffUsername']) . "</td>";
                             echo "<td>" . htmlspecialchars($row['staffEmail']) . "</td>";
                             echo "<td>
-                    <a href='edit_staff.php?id=" . $row['staffID'] . "' class='btn btn-sm btn-warning'>Edit</a>
-                    <a href='delete_staff.php?id=" . $row['staffID'] . "' class='btn btn-sm btn-danger' onclick='return confirm(\"Are you sure you want to delete this staff member?\")'>Delete</a>
-                    </td>";
+                                <a href='edit_staff.php?id=" . $row['staffID'] . "' class='btn btn-sm btn-warning'>Edit</a>
+                                <!-- Delete Button that triggers the modal -->
+                                <a href='#' class='btn btn-sm btn-danger' data-bs-toggle='modal' data-bs-target='#deleteModal" . $row['staffID'] . "'>Delete</a>
+                              </td>";
                             echo "</tr>";
+
+                            // Modal for confirmation
+                            echo "
+                            <div class='modal fade' id='deleteModal" . $row['staffID'] . "' tabindex='-1' aria-labelledby='deleteModalLabel" . $row['staffID'] . "' aria-hidden='true'>
+                                <div class='modal-dialog'>
+                                    <div class='modal-content'>
+                                        <div class='modal-header'>
+                                            <h5 class='modal-title' id='deleteModalLabel" . $row['staffID'] . "'>Confirm Deletion</h5>
+                                            <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close'></button>
+                                        </div>
+                                        <div class='modal-body'>
+                                            <p><strong>Are you sure you want to delete this staff member?</strong></p>
+                                            <p>This action <span class='text-danger'>cannot</span> be undone. Once deleted, all the staff's data will be permanently removed.</p>
+                                        </div>
+                                        <div class='modal-footer'>
+                                            <button type='button' class='btn btn-secondary' data-bs-dismiss='modal'>Cancel</button>
+                                            <a href='delete_staff.php?id=" . $row['staffID'] . "' class='btn btn-danger'>Delete</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>";
                         }
                     } else {
                         echo "<tr><td colspan='5' class='text-center'>No staff members found</td></tr>";

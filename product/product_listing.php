@@ -65,7 +65,6 @@ $result = $conn->query($sql);
         // Include the anonymous navbar if not logged in
         include('../navbar/navbar.php');
     } ?>
-
     <!-- Main Content -->
     <div class="container my-5">
         <h1 class="mb-4 text-center">Our Products</h1>
@@ -78,7 +77,8 @@ $result = $conn->query($sql);
                     $productImage = htmlspecialchars($row['productImage']) ?? '';
                     $productName = htmlspecialchars($row['productName'] ?? 'Unnamed Product');
                     $productDescription = trim($row['productDescription']);
-                    $productDescription = htmlspecialchars($productDescription ?: 'No description available.');                    $productPrice = number_format($row['productPrice'] ?? 0, 2);
+                    $productDescription = htmlspecialchars($productDescription ?: 'No description available.');
+                    $productPrice = number_format($row['productPrice'] ?? 0, 2);
                     echo '
     <div class="col-md-4">
         <div class="card h-100 shadow-sm product-card">';

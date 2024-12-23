@@ -6,18 +6,19 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.p
 // Ensure the request method is POST
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   // Check if admin is logged in
-  if (!isset($_SESSION['adminID'])) {
+  if (!isset($_SESSION['adminID']) && $_POST['role'] === 'admin') {
     header("Location: ../admin_login/admin_login.php?error=Unauthorized access");
     exit();
   }
 
-  $adminID = $_SESSION['adminID']; // Get adminID from session
+  $adminID = isset($_SESSION['adminID']) ? $_SESSION['adminID'] : NULL; // Get adminID from session if logged in, else set to null
 
   // Capture form data
   $staffName = trim($_POST['staffName']);
   $staffUsername = trim($_POST['staffUsername']);
   $staffEmail = trim($_POST['staffEmail']);
   $staffPassword = $_POST['staffPassword'];
+  $role = $_POST['role']; // Role from form (either 'admin' or 'staff')
 
   // Validate required fields
   if (empty($staffName) || empty($staffUsername) || empty($staffEmail) || empty($staffPassword)) {
@@ -47,10 +48,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   // Hash the password for security
   $hashedPassword = password_hash($staffPassword, PASSWORD_DEFAULT);
 
-  // Insert the new staff record into the database with the adminID
+  // Handle adminID for insertion (if role is 'admin', use the adminID; otherwise, NULL)
+  $adminIDToInsert = ($role === 'admin') ? $adminID : NULL;
+
+  // Insert the new staff record into the database with the appropriate adminID
   $sql = "INSERT INTO Staff (staffName, staffUsername, staffEmail, staffPassword, adminID) VALUES (?, ?, ?, ?, ?)";
   $stmt = $conn->prepare($sql);
-  $stmt->bind_param("ssssi", $staffName, $staffUsername, $staffEmail, $hashedPassword, $adminID);
+  
+  // Bind parameters and ensure we pass by reference
+  $stmt->bind_param("ssssi", $staffName, $staffUsername, $staffEmail, $hashedPassword, $adminIDToInsert);
 
   if ($stmt->execute()) {
     // Display success message with redirect using inline HTML and JS
@@ -61,7 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Success</title>
-    <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
+          <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
           <script>
             // Redirect to admin dashboard after 3 seconds
             setTimeout(function () {

@@ -2,19 +2,19 @@
 session_start(); // Start session
 
 // Check if the staff is logged in
-if (!isset($_SESSION['staffID']) || !isset($_SESSION['staffUsername'])) {
+if (!isset($_SESSION['userID']) || !isset($_SESSION['username'])) {
     header("Location: ../staff_login/staff_login.php?error=Please login to access the settings");
     exit();
 }
 
 // Fetch staff session data
-$staffID = $_SESSION['staffID'];
-$staffName = $_SESSION['staffUsername'];
+$staffID = $_SESSION['userID'];
+$staffName = $_SESSION['username'];
 
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
 // Fetch staff data from the database
-$sql = "SELECT staffName, staffEmail, staffUsername FROM Staff WHERE staffID = ?";
+$sql = "SELECT staffName, staffEmail, staffName,staffUsername FROM Staff WHERE staffID = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $staffID);
 $stmt->execute();

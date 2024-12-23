@@ -2,7 +2,7 @@
 session_start(); // Start session
 
 // Check if admin or staff is logged in
-if ((!isset($_SESSION['adminID']) || !isset($_SESSION['adminUsername'])) && (!isset($_SESSION['staffID']) || !isset($_SESSION['staffUsername']))) {
+if ((!isset($_SESSION['userID']) || !isset($_SESSION['username']))) {
     // Redirect to the appropriate login page
     header("Location: ../login/login.php?error=Please login to access the dashboard");
     exit();
@@ -11,10 +11,10 @@ if ((!isset($_SESSION['adminID']) || !isset($_SESSION['adminUsername'])) && (!is
 // Determine user type and session details
 if (isset($_SESSION['adminID'])) {
     $userType = 'Admin';
-    $userName = $_SESSION['adminName'];
-} elseif (isset($_SESSION['staffID'])) {
+    $userName = $_SESSION['username'];
+} else {
     $userType = 'Staff';
-    $userName = $_SESSION['staffUsername'];
+    $userName = $_SESSION['username'];
 }
 
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');

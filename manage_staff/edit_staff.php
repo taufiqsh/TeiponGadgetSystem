@@ -2,14 +2,14 @@
 session_start(); // Start session
 
 // Check if the admin is logged in
-if (!isset($_SESSION['adminID']) || !isset($_SESSION['adminUsername'])) {
+if (!isset($_SESSION['adminID']) || !isset($_SESSION['username'])) {
   // Redirect to the login page if not logged in
   header("Location: ../admin_login/admin_login.php?error=Please login to access the dashboard");
   exit();
 }
 
 $adminID = $_SESSION['adminID'];
-$adminUsername = $_SESSION['adminUsername'];
+$adminUsername = $_SESSION['username'];
 
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 

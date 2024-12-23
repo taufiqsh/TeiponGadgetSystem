@@ -9,63 +9,74 @@
   <link href="../global.css" rel="stylesheet">
 </head>
 
-<body class="bg-light">
-<?php include('../sidebar/admin_sidebar.php'); ?>
-  <div class="container d-flex justify-content-center align-items-center min-vh-100">
-    <div class="card shadow-sm p-4" style="width: 100%; max-width: 500px;">
-      <h2 class="text-center mb-4">Register New Staff</h2>
+<body>
+  <?php include('../sidebar/admin_sidebar.php'); ?>
+  <div class="container main-content">
+    <div class="row justify-content-center min-vh-100">
+      <div class="col-12 col-md-8 col-lg-6">
+        <div class="card shadow-sm p-4 mt-4">
+          <h2 class="text-center mb-4">Register New Staff</h2>
 
-      <?php if (isset($_GET['success']) && $_GET['success'] == 1): ?>
-        <div class="alert alert-success" role="alert">
-          Staff member registered successfully!
+          <?php if (isset($_GET['success']) && $_GET['success'] == 1): ?>
+            <div class="alert alert-success" role="alert">
+              Staff member registered successfully!
+            </div>
+          <?php elseif (isset($_GET['error'])): ?>
+            <div class="alert alert-danger" role="alert">
+              <?php echo htmlspecialchars($_GET['error']); ?>
+            </div>
+          <?php endif; ?>
+
+          <!-- Registration Form -->
+          <form action="process_register_staff.php" method="POST">
+
+            <div class="mb-3 d-flex justify-content-center">
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="role" id="admin" value="admin" checked required>
+                <label class="form-check-label" for="admin">Admin</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="role" id="staff" value="staff" required>
+                <label class="form-check-label" for="staff">Staff</label>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="staffName" class="form-label">Full Name</label>
+              <input type="text" class="form-control" id="staffName" name="staffName" placeholder="Enter staff full name" required>
+              <div class="error-message" id="nameError"></div>
+            </div>
+
+            <div class="mb-3">
+              <label for="staffUsername" class="form-label">Username</label>
+              <input type="text" class="form-control" id="staffUsername" name="staffUsername" placeholder="Enter staff username" required>
+              <div class="error-message" id="usernameError"></div>
+            </div>
+
+            <div class="mb-3">
+              <label for="staffEmail" class="form-label">Email</label>
+              <input type="email" class="form-control" id="staffEmail" name="staffEmail" placeholder="Enter staff email" required>
+              <div class="error-message" id="emailError"></div>
+            </div>
+
+            <div class="mb-3">
+              <label for="staffPassword" class="form-label">Password</label>
+              <input type="password" class="form-control" id="staffPassword" name="staffPassword" placeholder="Enter staff password" required>
+              <div class="error-message" id="passwordError"></div>
+            </div>
+
+            <div class="mb-3">
+              <label for="confirm_password" class="form-label">Confirm Password</label>
+              <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Re-enter your password" required>
+              <div class="error-message" id="confirmPasswordError"></div>
+            </div>
+
+            <div class="d-grid">
+              <button type="submit" class="btn btn-success" onclick="validateForm()">Register Staff</button>
+            </div>
+          </form>
         </div>
-      <?php elseif (isset($_GET['error'])): ?>
-        <div class="alert alert-danger" role="alert">
-          <?php echo htmlspecialchars($_GET['error']); ?>
-        </div>
-      <?php endif; ?>
-
-      <!-- Registration Form -->
-      <form action="process_register_staff.php" method="POST">
-
-        <div class="mb-3">
-          <label for="staffName" class="form-label">Full Name</label>
-          <input type="text" class="form-control" id="staffName" name="staffName" placeholder="Enter staff full name" required>
-          <div class="error-message" id="nameError"></div>
-        </div>
-
-        <div class="mb-3">
-          <label for="staffUsername" class="form-label">Username</label>
-          <input type="text" class="form-control" id="staffUsername" name="staffUsername" placeholder="Enter staff username" required>
-          <div class="error-message" id="usernameError"></div>
-        </div>
-
-        <div class="mb-3">
-          <label for="staffEmail" class="form-label">Email</label>
-          <input type="email" class="form-control" id="staffEmail" name="staffEmail" placeholder="Enter staff email" required>
-          <div class="error-message" id="emailError"></div>
-        </div>
-
-        <div class="mb-3">
-          <label for="staffPassword" class="form-label">Password</label>
-          <input type="password" class="form-control" id="staffPassword" name="staffPassword" placeholder="Enter staff password" required>
-          <div class="error-message" id="passwordError"></div>
-        </div>
-
-        <div class="mb-3">
-          <label for="confirm_password" class="form-label">Confirm Password</label>
-          <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Re-enter your password" required>
-          <div class="error-message" id="confirmPasswordError"></div>
-        </div>
-
-        <div class="d-grid">
-          <button type="submit" class="btn btn-success" onclick="validateForm()">Register Staff</button>
-        </div>
-      </form>
-
-      <!-- <div class="mt-3 text-center">
-        <a href="admin_login.php" class="btn btn-secondary">Back to Admin Login</a>
-      </div> -->
+      </div>
     </div>
   </div>
 
@@ -83,22 +94,22 @@
 
       let isValid = true;
 
-      if(!staffName.value.trim()){
+      if (!staffName.value.trim()) {
         document.getElementById('nameError').textContent = 'Staff name is required';
         isValid = false;
       }
 
-      if(!staffUsername.value.trim()){
+      if (!staffUsername.value.trim()) {
         document.getElementById('usernameError').textContent = 'Staff username is required';
         isValid = false;
       }
 
-      if(!staffEmail.value.trim()){
+      if (!staffEmail.value.trim()) {
         document.getElementById('emailError').textContent = 'Staff email is required';
         isValid = false;
       }
 
-      if(!staffPassword.value.trim()){
+      if (!staffPassword.value.trim()) {
         document.getElementById('passwordError').textContent = 'Staff password is required';
         isValid = false;
       }

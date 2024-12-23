@@ -2,8 +2,9 @@
 session_start(); // Start session
 
 // Check if the admin is logged in
-if (!isset($_SESSION['adminID']) || !isset($_SESSION['adminName'])) {
-    header("Location: ../admin_login/admin_login.php?error=Please login to access the dashboard");
+if (!(isset($_SESSION['userID']))) {
+    // Redirect to the login page if neither is logged in
+    header("Location: ../login/login.php?error=Please login to access the dashboard");
     exit();
 }
 

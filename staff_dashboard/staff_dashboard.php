@@ -2,13 +2,13 @@
 session_start();
 
 // Check if the staff is logged in
-if (!isset($_SESSION['staffID']) || !isset($_SESSION['staffUsername'])) {
+if (!isset($_SESSION['userID']) || !isset($_SESSION['username'])) {
   // Redirect to the login page if not logged in
   header("Location: ../staff_login/staff_login.php?error=Please login to access the dashboard");
   exit();
 }
 
-$staffUsername = $_SESSION['staffUsername']; // Get the staff's name from the session
+$staffName = $_SESSION['username']; // Get the staff's name from the session
 
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
@@ -43,7 +43,7 @@ $conn->close();
   <!-- Main Content -->
   <div class="main-content">
     <div class="container">
-      <h1 class="mb-4">Welcome, <?php echo htmlspecialchars($staffUsername); ?>!</h1>
+      <h1 class="mb-4">Welcome, <?php echo htmlspecialchars($staffName); ?>!</h1>
 
       <!-- Dashboard Cards -->
       <div class="row g-4">

@@ -1,18 +1,23 @@
 <?php
 session_start();
 
-if (isset($_POST['productID'])) {
-    $productID = $_POST['productID'];
+if (isset($_POST['id'])) {
+    $productID = $_POST['id'];
 
+    // Check if the cart exists
     if (isset($_SESSION['cart'])) {
-        foreach ($_SESSION['cart'] as $key => $item) {
+        foreach ($_SESSION['cart'] as $index => $item) {
             if ($item['id'] == $productID) {
-                unset($_SESSION['cart'][$key]);
-                $_SESSION['cart'] = array_values($_SESSION['cart']); // Reindex array after removal
-                echo "Item removed from cart";
+                // Remove the item from the cart
+                unset($_SESSION['cart'][$index]);
                 break;
             }
         }
     }
+
+    // Return the updated cart count and cart data
+    echo json_encode([
+        'cartCount' => array_sum(array_column($_SESSION['cart'], 'quantity')),
+        'cart' => $_SESSION['cart']
+    ]);
 }
-?>

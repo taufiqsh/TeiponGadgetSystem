@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once('config/db_config.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
 
 // Fetch all products from the database

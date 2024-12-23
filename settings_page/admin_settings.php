@@ -2,19 +2,19 @@
 session_start(); // Start session
 
 // Check if the admin is logged in
-if (!isset($_SESSION['adminID']) || !isset($_SESSION['adminName'])) {
+if (!isset($_SESSION['userID']) || !isset($_SESSION['username'])) {
     header("Location: ../admin_login/admin_login.php?error=Please login to access the dashboard");
     exit();
 }
 
 // Fetch admin session data
-$adminID = $_SESSION['adminID'];
-$adminName = $_SESSION['adminName'];
+$adminID = $_SESSION['userID'];
+$staffName = $_SESSION['username'];
 
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
 // Fetch admin data from the database
-$sql = "SELECT adminName, adminEmail,adminUsername FROM Admin WHERE adminID = ?";
+$sql = "SELECT staffName, staffEmail,staffUsername FROM Staff WHERE adminID = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $adminID);
 $stmt->execute();
@@ -35,18 +35,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Update admin details in the database
     if ($newPassword) {
-        $updateSql = "UPDATE Admin SET adminName = ?, adminEmail = ?, adminUsername = ?, adminPassword = ? WHERE adminID = ?";
+        $updateSql = "UPDATE Staff SET staffName = ?, staffEmail = ?, staffUsername = ?, staffPassword = ? WHERE adminID = ?";
         $updateStmt = $conn->prepare($updateSql);
         $updateStmt->bind_param("ssssi", $newName, $newEmail, $newUsername, $newPassword, $adminID);
     } else {
-        $updateSql = "UPDATE Admin SET adminName = ?, adminEmail = ?, adminUsername = ? WHERE adminID = ?";
+        $updateSql = "UPDATE Admin SET staffName = ?, staffEmail = ?, staffUsername = ? WHERE adminID = ?";
         $updateStmt = $conn->prepare($updateSql);
         $updateStmt->bind_param("sssi", $newName, $newEmail, $newUsername, $adminID);
     }
 
 
     if ($updateStmt->execute()) {
-        $_SESSION['adminName'] = $newName; // Update session with the new admin name
+        $_SESSION['staffName'] = $newName; // Update session with the new admin name
         header("Location: admin_settings.php?success=Details updated successfully");
         exit();
     } else {
@@ -85,15 +85,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <form action="" method="POST">
                 <div class="mb-3">
                     <label for="name" class="form-label">Name</label>
-                    <input type="text" class="form-control" id="name" name="name" value="<?php echo htmlspecialchars($admin['adminName']); ?>" required>
+                    <input type="text" class="form-control" id="name" name="name" value="<?php echo htmlspecialchars($admin['staffName']); ?>" required>
                 </div>
                 <div class="mb-3">
                     <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($admin['adminEmail']); ?>" required>
+                    <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($admin['staffEmail']); ?>" required>
                 </div>
                 <div class="mb-3">
                     <label for="username" class="form-label">Username</label>
-                    <input type="username" class="form-control" id="username" name="username" value="<?php echo htmlspecialchars($admin['adminUsername']); ?>" required>
+                    <input type="username" class="form-control" id="username" name="username" value="<?php echo htmlspecialchars($admin['staffUsername']); ?>" required>
                 </div>
                 <div class="mb-3">
                     <label for="password" class="form-label">New Password (optional)</label>
