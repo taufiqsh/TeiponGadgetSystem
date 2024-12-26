@@ -3,13 +3,13 @@ session_start();
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
 // Check if the customer is logged in
-if (!isset($_SESSION['customerID'])) {
+if (!isset($_SESSION['userID'])) {
     header("Location: login.php");
     exit();
 }
 
 $orderID = $_GET['orderID']; // Get the order ID from the URL
-$customerID = $_SESSION['customerID'];
+$customerID = $_SESSION['userID'];
 
 // Fetch order details from the database
 $sql = "SELECT * FROM orders WHERE orderID = ? AND customerID = ?";
@@ -42,9 +42,17 @@ $qrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?data=" . urlencode($pa
 
 <body>
     <?php include('../navbar/customer_navbar.php'); ?>
-    
+
     <div class="container my-5">
         <h1 class="text-center mb-4">Payment for Order #<?= $order['orderID']; ?></h1>
+
+        <?php if (isset($_SESSION['message'])): ?>
+            <div class="alert alert-<?= $_SESSION['message']['type']; ?>">
+                <?= htmlspecialchars($_SESSION['message']['text']); ?>
+            </div>
+            <?php unset($_SESSION['message']); // Clear the message after displaying 
+            ?>
+        <?php endif; ?>
 
         <div class="alert alert-info">
             <h4>Scan the QR code below to make payment</h4>

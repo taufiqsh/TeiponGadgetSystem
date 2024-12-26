@@ -22,6 +22,14 @@ $productQuery = "SELECT COUNT(*) AS total_products FROM product";
 $productResult = $conn->query($productQuery);
 $productCount = $productResult->fetch_assoc()['total_products'];
 
+// Query to get the total sales for the last month with 'completed' status only
+$salesQuery = "SELECT SUM(totalAmount) AS total_sales 
+               FROM orders 
+               WHERE orderDate >= CURDATE() - INTERVAL 1 MONTH 
+               AND orderStatus = 'Order Completed'";
+$salesResult = $conn->query($salesQuery);
+$totalSales = $salesResult->fetch_assoc()['total_sales'];
+
 // Close the database connection
 $conn->close();
 ?>
@@ -69,41 +77,16 @@ $conn->close();
           </div>
         </div>
 
-      </div>
+        <div class="col-md-4">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">Total Sales (Last 30 Days)</h5>
+              <p class="card-text fs-4">RM <?php echo number_format($totalSales ?? 0, 2); ?></p>
+              <a href="../generate_sales/generate_sales_pdf.php" class="btn btn-success">Download PDF</a>
+            </div>
+          </div>
+        </div>
 
-      <!-- Recent Tasks -->
-      <div class="mt-5">
-        <h2>Recent Tasks</h2>
-        <table class="table table-striped">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Task</th>
-              <th>Date</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>1</td>
-              <td>Processed an order</td>
-              <td>2024-12-13</td>
-              <td><a href="#" class="btn btn-sm btn-primary">Details</a></td>
-            </tr>
-            <tr>
-              <td>2</td>
-              <td>Updated product inventory</td>
-              <td>2024-12-12</td>
-              <td><a href="#" class="btn btn-sm btn-primary">Details</a></td>
-            </tr>
-            <tr>
-              <td>3</td>
-              <td>Responded to a customer query</td>
-              <td>2024-12-11</td>
-              <td><a href="#" class="btn btn-sm btn-primary">Details</a></td>
-            </tr>
-          </tbody>
-        </table>
       </div>
     </div>
   </div>

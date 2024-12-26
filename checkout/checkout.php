@@ -50,6 +50,18 @@ if ($result->num_rows > 0) {
     <!-- Link to Bootstrap CSS -->
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .product-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+        }
+        .price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color:rgb(4, 4, 4);
+        }
+    </style>
 </head>
 
 <body>
@@ -57,66 +69,85 @@ if ($result->num_rows > 0) {
     <div class="container my-5">
         <h1 class="text-center mb-4">Checkout</h1>
 
-        <div class="cart-items mb-4">
-            <h3>Your Cart Items:</h3>
-            <?php if (!empty($cart)): ?>
-                <div class="cart-list">
-                    <?php foreach ($cart as $item): ?>
-                        <div class="cart-item d-flex justify-content-between mb-3">
-                            <div class="d-flex">
-                                <img src="../uploads/<?= $item['image']; ?>" alt="<?= $item['name']; ?>" width="100" class="me-3">
-                                <div>
-                                    <h5><?= $item['name']; ?> (x<?= $item['quantity']; ?>)</h5>
-                                    <small>RM <?= number_format($item['price'], 2); ?></small>
-                                </div>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3>Your Cart Items</h3>
+                    </div>
+                    <div class="card-body">
+                        <?php if (!empty($cart)): ?>
+                            <div class="cart-list">
+                                <?php foreach ($cart as $item): ?>
+                                    <div class="cart-item d-flex justify-content-between mb-3">
+                                        <div class="d-flex">
+                                            <img src="../uploads/<?= htmlspecialchars($item['image']); ?>" alt="<?= htmlspecialchars($item['name']); ?>" class="me-3 img-thumbnail product-image">
+                                            <div>
+                                                <h5><?= htmlspecialchars($item['name']); ?> (x<?= $item['quantity']; ?>)</h5>
+                                                <small class="price">RM <?= number_format($item['price'], 2); ?></small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
-                        </div>
-                    <?php endforeach; ?>
+                        <?php else: ?>
+                            <p>Your cart is empty. <a href="shop.php">Browse products</a></p>
+                        <?php endif; ?>
+                    </div>
                 </div>
-            <?php else: ?>
-                <p>Your cart is empty. <a href="shop.php">Browse products</a></p>
-            <?php endif; ?>
-        </div>
+            </div>
 
-        <div class="checkout-summary">
-            <h3>Order Summary:</h3>
-            <p><strong>Total Price: </strong>RM <?= number_format($totalPrice, 2); ?></p>
-
-            <form action="process_checkout.php" method="POST">
-                <h4 class="mt-4">Shipping Information:</h4>
-
-                <div class="mb-3">
-                    <label for="shippingName" class="form-label">Name</label>
-                    <input type="text" class="form-control" id="shippingName" name="shippingName" value="<?= htmlspecialchars($customer['customerName']); ?>" required>
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3>Order Summary</h3>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Total Price: </strong><span class="price">RM <?= number_format($totalPrice, 2); ?></span></p>
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label for="shippingAddress" class="form-label">Address</label>
-                    <input type="text" class="form-control" id="shippingAddress" name="shippingAddress" value="<?= htmlspecialchars($customer['customerAddress']); ?>" required>
-                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Shipping Information</h3>
+                    </div>
+                    <div class="card-body">
+                        <form action="process_checkout.php" method="POST">
+                            <div class="mb-3">
+                                <label for="shippingName" class="form-label">Name</label>
+                                <input type="text" class="form-control" id="shippingName" name="shippingName" value="<?= htmlspecialchars($customer['customerName']); ?>" required>
+                            </div>
 
-                <div class="mb-3">
-                    <label for="shippingState" class="form-label">State</label>
-                    <input type="text" class="form-control" id="shippingState" name="shippingState" value="<?= htmlspecialchars($customer['customerState']); ?>" required>
-                </div>
+                            <div class="mb-3">
+                                <label for="shippingAddress" class="form-label">Address</label>
+                                <input type="text" class="form-control" id="shippingAddress" name="shippingAddress" value="<?= htmlspecialchars($customer['customerAddress']); ?>" required>
+                            </div>
 
-                <div class="mb-3">
-                    <label for="shippingCity" class="form-label">City</label>
-                    <input type="text" class="form-control" id="shippingCity" name="shippingCity" value="<?= htmlspecialchars($customer['customerCity']); ?>" required>
-                </div>
+                            <div class="mb-3">
+                                <label for="shippingState" class="form-label">State</label>
+                                <input type="text" class="form-control" id="shippingState" name="shippingState" value="<?= htmlspecialchars($customer['customerState']); ?>" required>
+                            </div>
 
-                <div class="mb-3">
-                    <label for="shippingPostalCode" class="form-label">Postal Code</label>
-                    <input type="text" class="form-control" id="shippingPostalCode" name="shippingPostalCode" value="<?= htmlspecialchars($customer['customerPostalCode']); ?>" required>
-                </div>
+                            <div class="mb-3">
+                                <label for="shippingCity" class="form-label">City</label>
+                                <input type="text" class="form-control" id="shippingCity" name="shippingCity" value="<?= htmlspecialchars($customer['customerCity']); ?>" required>
+                            </div>
 
-                <div class="mb-3">
-                    <label for="shippingPhone" class="form-label">Phone</label>
-                    <input type="text" class="form-control" id="shippingPhone" name="shippingPhone" value="<?= htmlspecialchars($customer['customerPhoneNumber']); ?>" required>
-                </div>
+                            <div class="mb-3">
+                                <label for="shippingPostalCode" class="form-label">Postal Code</label>
+                                <input type="text" class="form-control" id="shippingPostalCode" name="shippingPostalCode" value="<?= htmlspecialchars($customer['customerPostalCode']); ?>" required>
+                            </div>
 
-                <button type="submit" class="btn btn-primary">Complete Purchase</button>
-            </form>
+                            <div class="mb-3">
+                                <label for="shippingPhone" class="form-label">Phone</label>
+                                <input type="text" class="form-control" id="shippingPhone" name="shippingPhone" value="<?= htmlspecialchars($customer['customerPhoneNumber']); ?>" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100">Complete Purchase</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

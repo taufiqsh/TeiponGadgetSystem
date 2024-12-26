@@ -9,8 +9,6 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.p
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Teipon Gadget</title>
-  <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
-  <link href="../assets/css/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 
 <body>
@@ -25,7 +23,6 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.p
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
           <ul class="navbar-nav">
             <li class="nav-item">
               <a class="nav-link text-white" href="/TeiponGadgetSystem/product/product_listing.php">Our Products</a>
@@ -41,21 +38,21 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.p
                     }
                   }
                   echo $cartCount;
-                  ?></span>)
+                  ?>
+                </span>)
               </a>
             </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" data-bs-toggle="dropdown">
-                <img src="../assets/css/bootstrap-icons/icons/person-fill.svg" alt="Profile Icon" width="24"> <?php echo htmlspecialchars($_SESSION['username']); ?>
+                <i class="bi bi-person-fill"></i> <?php echo htmlspecialchars($_SESSION['username']); ?>
               </a>
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-              <li><a class="dropdown-item" href="/TeiponGadgetSystem/payment/pending_payment.php">Payments</a></li>
+                <li><a class="dropdown-item" href="/TeiponGadgetSystem/payment/view_payment.php">My Purchases</a></li>
                 <li><a class="dropdown-item" href="/TeiponGadgetSystem/settings_page/customer_settings.php">Settings</a></li>
                 <li><a class="dropdown-item" href="/TeiponGadgetSystem/logout/logout.php">Logout</a></li>
               </ul>
             </li>
           </ul>
-        </div>
       </div>
     </nav>
   <?php endif; ?>
@@ -78,9 +75,6 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.p
       </div>
     </div>
   </div>
-
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="../assets/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

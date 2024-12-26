@@ -2,14 +2,14 @@
 session_start(); // Start session
 
 // Check if the customer is logged in
-if (!isset($_SESSION['customerID']) || !isset($_SESSION['customerUsername'])) {
+if (!isset($_SESSION['userID']) || !isset($_SESSION['username'])) {
     header("Location: ../login/login.php?error=" . urlencode("Please login to access the settings"));
     exit();
 }
 
 // Fetch customer session data
-$customerID = $_SESSION['customerID'];
-$customerUsername = $_SESSION['customerUsername'];
+$customerID = $_SESSION['userID'];
+$customerUsername = $_SESSION['username'];
 
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 

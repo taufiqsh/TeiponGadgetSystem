@@ -3,11 +3,10 @@ session_start();
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
 // Check if the user is logged in
-if (!isset($_SESSION['username'])) {
+if (!isset($_SESSION['userID'])) {
     header('Location: login.php');
     exit();
 }
-
 $userID = $_SESSION['userID'];
 
 // Fetch all products from the database
@@ -21,7 +20,7 @@ $result = $conn->query($sql);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Customer Home</title>
-    <link href="assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 
@@ -86,11 +85,18 @@ $result = $conn->query($sql);
         </div>
     </div>
 
-    <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         // Add product to cart
         function addToCart(productID, productName, productPrice, productImage) {
+            console.log("Adding to cart:", {
+                productID,
+                productName,
+                productPrice,
+                productImage
+            }); // Debug log
+
             $.ajax({
                 url: '../cart/add_to_cart.php',
                 method: 'POST',
@@ -105,49 +111,57 @@ $result = $conn->query($sql);
                     const cartCountElement = document.getElementById('cartCount');
                     cartCountElement.innerText = responseData.cartCount; // Update cart count
                     updateCartModal(responseData.cart); // Update the modal with new cart data
+                },
+                error: function(xhr, status, error) {
+                    console.error("Add to cart error:", status, error); // Debug error
                 }
             });
         }
 
         // Update the cart modal with current cart data
         function updateCartModal(cart) {
-            var cartItemsHTML = '';
-            var total = 0;
+            let cartItemsHTML = '';
+            let total = 0;
 
-            // Loop through each cart item and display it
-            cart.forEach(function(item) {
-                total += item.price * item.quantity; // Calculate total price
+            cart.forEach(item => {
+                total += item.price * item.quantity;
                 cartItemsHTML += `
-                <div class="cart-item d-flex justify-content-between mb-3">
-                    <div class="d-flex">
-                        <img src="../uploads/${item.image}" alt="${item.name}" width="50" class="me-3">
-                        <div>
-                            <span>${item.name} (x${item.quantity})</span><br>
-                            <small>RM ${item.price.toFixed(2)}</small>
-                        </div>
+        <div class="cart-item card mb-3 shadow-sm">
+            <div class="card-body d-flex justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <img src="../uploads/${item.image}" alt="${item.name}" class="rounded img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                    <div>
+                        <h6 class="mb-1">${item.name} <small class="text-muted">(x${item.quantity})</small></h6>
+                        <p class="mb-0 text-primary fw-bold">RM ${(Number(item.price)).toLocaleString(2)}</p>
                     </div>
-                    <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.id})">Remove</button>
-                </div>`;
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.id})">
+                    <i class="bi bi-trash3"></i> Remove
+                </button>
+            </div>
+        </div>`;
             });
 
-            // Update cart content and total
             $('#cartItems').html(cartItemsHTML);
-            $('#cartTotal').text(total.toFixed(2)); // Update total price
+            $('#cartTotal').text(total.toLocaleString());
         }
 
         // Remove product from cart
         function removeFromCart(productId) {
             $.ajax({
-                url: '../cart/remove_from_cart.php',
+                url: '../cart/remove_from_cart.php', // Backend endpoint for item removal
                 method: 'POST',
                 data: {
-                    id: productId
+                    productID: productId // Pass the specific product ID to be removed
                 },
                 success: function(response) {
                     const responseData = JSON.parse(response);
-                    updateCartModal(responseData.cart); // Update the modal with new cart data
+                    updateCartModal(responseData.cart); // Update the modal with the new cart data
                     const cartCountElement = document.getElementById('cartCount');
-                    cartCountElement.innerText = responseData.cartCount; // Update cart count
+                    cartCountElement.innerText = responseData.cartCount; // Update the cart count
+                },
+                error: function(xhr, status, error) {
+                    console.error("Remove from cart error:", status, error); // Debug error
                 }
             });
         }
@@ -155,15 +169,33 @@ $result = $conn->query($sql);
         // Initialize the cart modal when the page loads
         $(document).ready(function() {
             $.ajax({
-                url: '../cart/get_cart.php', // You can use this endpoint to retrieve cart data on page load if needed
+                url: '../cart/get_cart.php', // Retrieve cart data on page load
                 method: 'GET',
                 success: function(response) {
-                    const cart = response.cart || [];
-                    updateCartModal(cart); // Populate the modal with current cart items
+                    try {
+                        const responseData = JSON.parse(response); // Safely parse the response into a JavaScript object
+
+                        // Check if responseData contains the expected 'cart' property
+                        if (responseData && responseData.cart) {
+                            const cart = responseData.cart || [];
+                            updateCartModal(cart); // Populate the modal with current cart items
+                            // Optionally, update the cart count displayed on the page
+                            const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
+                            document.getElementById('cartCount').innerText = cartCount; // Update cart count
+                        } else {
+                            console.error("Cart data is missing in the response.");
+                        }
+                    } catch (error) {
+                        console.error("Error parsing the cart data:", error); // Debug parsing error
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Get cart error:", status, error); // Debug error on request failure
                 }
             });
         });
     </script>
+
 </body>
 
 </html>
