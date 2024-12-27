@@ -1,0 +1,145 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#chatbox {
+    width: 400px;
+    height: 500px;
+    background-color: #ffffff;
+    border: 2px solid #b1b1b1;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#chat-header {
+    background-color: #4DA1A9;
+    color: white;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #b1b1b1;
+}
+
+#chat-header h3 {
+    margin: 0;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+#chat-header img {
+    width: 50px;
+    height: 50px;
+}
+
+#close-btn {
+    background-color: transparent;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+#messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 15px;
+    background-color: #F6F4F0;
+    scrollbar-width: thin;
+    scrollbar-color: #4DA1A9 #f4f4f9;
+}
+
+#messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+#messages::-webkit-scrollbar-track {
+    background: #585858;
+}
+
+#messages::-webkit-scrollbar-thumb {
+    background-color: #585858;
+    border-radius: 10px;
+}
+
+.message {
+    display: flex;
+    margin: 10px 0;
+}
+
+.message.user {
+    justify-content: flex-end;
+}
+
+.message.bot {
+    justify-content: flex-start;
+}
+
+.message-content {
+    max-width: 70%;
+    padding: 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.message.user .message-content {
+    background-color: #2E5077;
+    color: white;
+    text-align: right;
+}
+
+.message.bot .message-content {
+    background-color: #79D7BE;
+    color: black;
+    text-align: left;
+}
+
+.loading-bubble {
+    background-color: #79D7BE;
+    color: black;
+    padding: 10px;
+    border-radius: 15px;
+    font-size: 14px;
+    text-align: center;
+    line-height: 1;
+}
+
+#input-area {
+    display: flex;
+    padding: 6px;
+    border-top: 2px solid #b1b1b1;
+}
+
+#userInput {
+    flex-grow: 1;
+    margin-right: 8px;
+}
+
+#send-btn {
+    background-color: #4DA1A9;
+    border: none;
+    color: white;
+    width: 37px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+#send-btn:hover {
+    background-color: #79D7BE;
+}

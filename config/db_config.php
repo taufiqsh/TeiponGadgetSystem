@@ -1,7 +1,7 @@
 <?php
 $servername = "localhost";
 $username = "root";
-$password = "root";
+$password = "";
 $dbname = "teipon_gadget"; // Change to your database name
 
 $conn = new mysqli($servername, $username, $password, $dbname);
