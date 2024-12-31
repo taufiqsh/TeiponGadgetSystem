@@ -1,17 +1,5 @@
 <?php
-// Database connection details
-$servername = "localhost";
-$username = "root"; // Default username for local MySQL
-$password = "root"; // Default password for local MySQL
-$dbname = "teipon_gadget"; // Database name
-
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
 // Check if form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
