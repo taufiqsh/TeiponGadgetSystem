@@ -1,7 +1,7 @@
 <?php
 $servername = "localhost";
 $username = "root"; // Replace with your DB username
-$password = "root"; // Replace with your DB password
+$password = ""; // Replace with your DB password
 $dbname = "teipon_gadget"; // Keep this to use later
 
 // Connect without selecting a database initially

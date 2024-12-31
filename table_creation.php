@@ -44,6 +44,7 @@ $tables = [
         totalAmount DECIMAL(10,2) NOT NULL,
         orderStatus VARCHAR(50) NOT NULL,
         customerID INT NOT NULL,
+        staffID INT,
             FOREIGN KEY (customerID) REFERENCES customer(customerID) ON DELETE CASCADE,
     FOREIGN KEY (staffID) REFERENCES staff(staffID) ON DELETE SET NULL
     )",
@@ -81,7 +82,7 @@ $tables = [
     )"
 ];
 
-// Execute each query
+
 foreach ($tables as $tableName => $sql) {
     if ($conn->query($sql) === TRUE) {
         echo "Table '$tableName' created successfully!<br>";
@@ -90,8 +91,30 @@ foreach ($tables as $tableName => $sql) {
     }
 }
 
+$adminUsername = 'admin';
+$adminPassword = '$2a$12$MTkrwrZoblu7LrxeipevJOXIoCwpcR2CsuhssVFgjBKEcmGQLVnLy'; // Pre-hashed bcrypt password
+$adminEmail = 'admin@example.com';
+$adminName = 'Admin User';
+
+$sqlInsertAdmin = "INSERT INTO staff (staffName, staffUsername, staffEmail, staffPassword) 
+                   VALUES (?, ?, ?, ?)";
+
+$stmt = $conn->prepare($sqlInsertAdmin);
+if ($stmt) {
+    $stmt->bind_param("ssss", $adminName, $adminUsername, $adminEmail, $adminPassword);
+    if ($stmt->execute()) {
+        echo "Admin user inserted successfully!<br>";
+    } else {
+        echo "Error inserting admin: " . $stmt->error . "<br>";
+    }
+    $stmt->close();
+} else {
+    echo "Error preparing admin insert: " . $conn->error . "<br>";
+}
+
 // Close connection
 $conn->close();
+
 ?>
 
 <!DOCTYPE html>
