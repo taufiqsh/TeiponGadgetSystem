@@ -94,7 +94,7 @@ foreach ($tables as $tableName => $sql) {
 
 $adminUsername = 'admin';
 $adminPassword = '$2a$12$MTkrwrZoblu7LrxeipevJOXIoCwpcR2CsuhssVFgjBKEcmGQLVnLy'; // Pre-hashed bcrypt password
-$adminEmail = 'admin5@yopmail.com';
+$adminEmail = 'admin@yopmail.com';
 $adminName = 'Admin User';
 
 $sqlInsertAdmin = "INSERT INTO staff (staffName, staffUsername, staffEmail, staffPassword) 
@@ -126,6 +126,72 @@ if ($stmt) {
     $stmt->close();
 } else {
     echo "Error preparing admin insert: " . $conn->error . "<br>";
+}
+$productData = [
+    [
+        'productName' => 'iPhone 16',
+        'productDescription' => 'The latest iPhone with Bionic chip and advanced dual-camera system.',
+        'productPrice' => 1500.99,
+        'productStock' => 50,
+        'productImage' => '1734372950_iphone_16__c5bvots96jee_xlarge.png',
+        'productCreatedDate' => date('Y-m-d H:i:s'),
+        'staffID' => $adminID // Assuming admin user manages these products
+    ],
+    [
+        'productName' => 'Samsung S24 Ultra',
+        'productDescription' => 'Flagship Samsung phone.',
+        'productPrice' => 1899.99,
+        'productStock' => 40,
+        'productImage' => '1735748792_s24 ultra.jpg',
+        'productCreatedDate' => date('Y-m-d H:i:s'),
+        'staffID' => $adminID
+    ],
+    [
+        'productName' => 'Samsung S24',
+        'productDescription' => 'Flagship Samsung phone.',
+        'productPrice' => 1699.99,
+        'productStock' => 30,
+        'productImage' => '1734556623_s24.png',
+        'productCreatedDate' => date('Y-m-d H:i:s'),
+        'staffID' => $adminID
+    ],
+    [
+        'productName' => 'Iphone 16 Pro Max',
+        'productDescription' => 'High-performance.',
+        'productPrice' => 2000.99,
+        'productStock' => 25,
+        'productImage' => '1734556556_iphone_16pro__erw9alves2qa_xlarge.png',
+        'productCreatedDate' => date('Y-m-d H:i:s'),
+        'staffID' => $adminID
+    ]
+];
+
+$sqlInsertProduct = "INSERT INTO product (productName, productDescription, productPrice, productStock, productImage, productCreatedDate, staffID) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+$stmtProduct = $conn->prepare($sqlInsertProduct);
+if ($stmtProduct) {
+    foreach ($productData as $product) {
+        $stmtProduct->bind_param(
+            "ssdisss",
+            $product['productName'],
+            $product['productDescription'],
+            $product['productPrice'],
+            $product['productStock'],
+            $product['productImage'],
+            $product['productCreatedDate'],
+            $product['staffID']
+        );
+
+        if ($stmtProduct->execute()) {
+            echo "Product '{$product['productName']}' inserted successfully!<br>";
+        } else {
+            echo "Error inserting product '{$product['productName']}': " . $stmtProduct->error . "<br>";
+        }
+    }
+    $stmtProduct->close();
+} else {
+    echo "Error preparing product insert: " . $conn->error . "<br>";
 }
 
 // Close connection
