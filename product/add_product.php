@@ -12,7 +12,7 @@ if ((!isset($_SESSION['userID']) || !isset($_SESSION['username']))) {
 if (isset($_SESSION['adminID'])) {
     $userType = 'Admin';
     $userName = $_SESSION['username'];
-} elseif (isset($_SESSION['staffID'])) {
+} elseif (!isset($_SESSION['adminID'])) {
     $userType = 'Staff';
     $userName = $_SESSION['username'];
 }
