@@ -61,7 +61,7 @@ $conn->close();
             <div class="card-body">
               <h5 class="card-title">Total Orders</h5>
               <p class="card-text fs-4"><?php echo $orderCount; ?></p>
-              <a href="../manage_orders/manage_orders.php" class="btn btn-primary">View Details</a>
+              <a href="../order/manage_order.php" class="btn btn-primary">View Details</a>
             </div>
           </div>
         </div>
