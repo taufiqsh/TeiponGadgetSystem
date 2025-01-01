@@ -44,6 +44,7 @@ $tables = [
         totalAmount DECIMAL(10,2) NOT NULL,
         orderStatus VARCHAR(50) NOT NULL,
         customerID INT NOT NULL,
+        receiptPath varchar(255) DEFAULT NULL,
         staffID INT,
             FOREIGN KEY (customerID) REFERENCES customer(customerID) ON DELETE CASCADE,
     FOREIGN KEY (staffID) REFERENCES staff(staffID) ON DELETE SET NULL
@@ -93,7 +94,7 @@ foreach ($tables as $tableName => $sql) {
 
 $adminUsername = 'admin';
 $adminPassword = '$2a$12$MTkrwrZoblu7LrxeipevJOXIoCwpcR2CsuhssVFgjBKEcmGQLVnLy'; // Pre-hashed bcrypt password
-$adminEmail = 'admin@example.com';
+$adminEmail = 'admin5@yopmail.com';
 $adminName = 'Admin User';
 
 $sqlInsertAdmin = "INSERT INTO staff (staffName, staffUsername, staffEmail, staffPassword) 
@@ -103,7 +104,22 @@ $stmt = $conn->prepare($sqlInsertAdmin);
 if ($stmt) {
     $stmt->bind_param("ssss", $adminName, $adminUsername, $adminEmail, $adminPassword);
     if ($stmt->execute()) {
-        echo "Admin user inserted successfully!<br>";
+        $adminID = $stmt->insert_id; // Get the newly inserted admin's staffID
+
+        // Update the adminID field to point to itself
+        $sqlUpdateAdminID = "UPDATE staff SET adminID = ? WHERE staffID = ?";
+        $updateStmt = $conn->prepare($sqlUpdateAdminID);
+        if ($updateStmt) {
+            $updateStmt->bind_param("ii", $adminID, $adminID);
+            if ($updateStmt->execute()) {
+                echo "Admin ID set for admin user successfully!<br>";
+            } else {
+                echo "Error updating adminID: " . $updateStmt->error . "<br>";
+            }
+            $updateStmt->close();
+        } else {
+            echo "Error preparing adminID update: " . $conn->error . "<br>";
+        }
     } else {
         echo "Error inserting admin: " . $stmt->error . "<br>";
     }
