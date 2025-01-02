@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $updateStmt = $conn->prepare($updateSql);
         $updateStmt->bind_param("ssssi", $newName, $newEmail, $newUsername, $newPassword, $adminID);
     } else {
-        $updateSql = "UPDATE Admin SET staffName = ?, staffEmail = ?, staffUsername = ? WHERE adminID = ?";
+        $updateSql = "UPDATE Staff SET staffName = ?, staffEmail = ?, staffUsername = ? WHERE adminID = ?";
         $updateStmt = $conn->prepare($updateSql);
         $updateStmt->bind_param("sssi", $newName, $newEmail, $newUsername, $adminID);
     }

@@ -11,10 +11,10 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.p
 
 if (isset($_SESSION['adminID'])) {
     $userType = 'Admin';
-    $userName = $_SESSION['adminName'];
+    $userName = $_SESSION['username'];
 } else if (!isset($_SESSION['adminID'])) {
     $userType = 'Staff';
-    $userName = $_SESSION['staffUsername'];
+    $userName = $_SESSION['username'];
 }
 
 $productID = $_GET['id'] ?? null;
