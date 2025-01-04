@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
-
+//dsdasdasda
 // Check if the user is logged in
 if (!isset($_SESSION['userID'])) {
     header('Location: login.php');
