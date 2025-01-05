@@ -12,6 +12,7 @@ if ($role === 'customer') {
     $usernameField = "customerUsername";
     $passwordField = "customerPassword";
     $idField = "customerID";
+    $statusField = "status";
     $redirectPath = "../customer/customer_home.php";
 } elseif ($role === 'staff') {
     $table = "staff";
@@ -36,6 +37,13 @@ $result = $stmt->get_result();
 // Check user existence
 if ($result->num_rows > 0) {
     $row = $result->fetch_assoc();
+
+    // Check if the user is a customer and their status is '0' (disabled)
+    if ($role === 'customer' && $row[$statusField] == 0) {
+        header("Location: login.php?error=account_disabled");
+        exit();
+    }
+    
     if (password_verify($pass, $row[$passwordField])) {
         // Set session variables
         $_SESSION['userID'] = $row[$idField];

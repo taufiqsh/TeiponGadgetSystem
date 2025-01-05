@@ -21,7 +21,7 @@ $userName = $_SESSION['username'];
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
 // Fetch all customers except their password
-$sql = "SELECT customerID, customerName, customerEmail, customerPhoneNumber, customerState, customerPostalCode, customerCity, customerAddress FROM Customer";
+$sql = "SELECT customerID, customerName, customerEmail, customerPhoneNumber, customerState, customerPostalCode, customerCity, customerAddress, status FROM Customer";
 $result = $conn->query($sql);
 ?>
 
@@ -80,7 +80,6 @@ $result = $conn->query($sql);
     <div class="main-content">
         <div class="container">
             <h1 class="mb-4">Manage Customers</h1>
-            <p>Welcome, <?php echo htmlspecialchars($userType . " " . $userName); ?>!</p>
 
             <!-- Success or error message -->
             <?php if (isset($_GET['success'])): ?>
@@ -119,33 +118,64 @@ $result = $conn->query($sql);
                             echo "<td>" . htmlspecialchars($row['customerPostalCode']) . "</td>";
                             echo "<td>" . htmlspecialchars($row['customerCity']) . "</td>";
                             echo "<td>" . htmlspecialchars($row['customerAddress']) . "</td>";
-                            echo "<td>
-                                <a href='edit_customer.php?id=" . $row['customerID'] . "' class='btn btn-sm btn-warning'>Edit</a>
-                                <!-- Delete Button that triggers the modal -->
-                                <a href='#' class='btn btn-sm btn-danger' data-bs-toggle='modal' data-bs-target='#deleteModal" . $row['customerID'] . "'>Delete</a>
-                              </td>";
-                            echo "</tr>";
 
-                            // Modal for confirmation
-                            echo "
-                            <div class='modal fade' id='deleteModal" . $row['customerID'] . "' tabindex='-1' aria-labelledby='deleteModalLabel" . $row['customerID'] . "' aria-hidden='true'>
-                                <div class='modal-dialog'>
-                                    <div class='modal-content'>
-                                        <div class='modal-header'>
-                                            <h5 class='modal-title' id='deleteModalLabel" . $row['customerID'] . "'>Confirm Deletion</h5>
-                                            <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close'></button>
-                                        </div>
-                                        <div class='modal-body'>
-                                            <p><strong>Are you sure you want to delete this customer?</strong></p>
-                                            <p>This action <span class='text-danger'>cannot</span> be undone. Once deleted, all the customer's data will be permanently removed.</p>
-                                        </div>
-                                        <div class='modal-footer'>
-                                            <button type='button' class='btn btn-secondary' data-bs-dismiss='modal'>Cancel</button>
-                                            <a href='delete_customer.php?id=" . $row['customerID'] . "' class='btn btn-danger'>Delete</a>
+                            if ($row['status'] == 0) {
+                                // If status is 0, show 'Enable' button and related modal
+                                echo "<td>
+                                        <a href='edit_customer.php?id=" . $row['customerID'] . "' class='btn btn-sm btn-warning'>Edit</a>
+                                        <a href='#' class='btn btn-sm btn-success' data-bs-toggle='modal' data-bs-target='#enableModal" . $row['customerID'] . "'>Enable</a>
+                                    </td>";
+
+                                // Modal for enabling the customer
+                                echo "
+                                <div class='modal fade' id='enableModal" . $row['customerID'] . "' tabindex='-1' aria-labelledby='enableModalLabel" . $row['customerID'] . "' aria-hidden='true'>
+                                    <div class='modal-dialog'>
+                                        <div class='modal-content'>
+                                            <div class='modal-header'>
+                                                <h5 class='modal-title' id='enableModalLabel" . $row['customerID'] . "'>Confirm Enabling</h5>
+                                                <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close'></button>
+                                            </div>
+                                            <div class='modal-body'>
+                                                <p><strong>Are you sure you want to enable this customer?</strong></p>
+                                                <p>This action will activate the customer, allowing them to access their account again.</p>
+                                            </div>
+                                            <div class='modal-footer'>
+                                                <button type='button' class='btn btn-secondary' data-bs-dismiss='modal'>Cancel</button>
+                                                <a href='enable_customer.php?id=" . $row['customerID'] . "' class='btn btn-success'>Enable</a>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>";
+                                </div>";
+
+                            } else {
+                                // If status is 1, show 'Disable' button and related modal
+                                echo "<td>
+                                        <a href='edit_customer.php?id=" . $row['customerID'] . "' class='btn btn-sm btn-warning'>Edit</a>
+                                        <a href='#' class='btn btn-sm btn-danger' data-bs-toggle='modal' data-bs-target='#disableModal" . $row['customerID'] . "'>Disable</a>
+                                      </td>";
+
+                                // Modal for disabling the customer
+                                echo "
+                                <div class='modal fade' id='disableModal" . $row['customerID'] . "' tabindex='-1' aria-labelledby='disableModalLabel" . $row['customerID'] . "' aria-hidden='true'>
+                                    <div class='modal-dialog'>
+                                        <div class='modal-content'>
+                                            <div class='modal-header'>
+                                                <h5 class='modal-title' id='disableModalLabel" . $row['customerID'] . "'>Confirm Disabling</h5>
+                                                <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close'></button>
+                                            </div>
+                                            <div class='modal-body'>
+                                                <p><strong>Are you sure you want to disable this customer?</strong></p>
+                                                <p>This action will prevent the customer from accessing their account. They will no longer be able to log in.</p>
+                                            </div>
+                                            <div class='modal-footer'>
+                                                <button type='button' class='btn btn-secondary' data-bs-dismiss='modal'>Cancel</button>
+                                                <a href='disable_customer.php?id=" . $row['customerID'] . "' class='btn btn-warning'>Disable</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>";
+                            }
+                            echo "</tr>";
                         }
                     } else {
                         echo "<tr><td colspan='9' class='text-center'>No customers found</td></tr>";
