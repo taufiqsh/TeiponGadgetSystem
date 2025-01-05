@@ -34,6 +34,7 @@ $tables = [
         customerPostalCode VARCHAR(255) NOT NULL,
         customerCity VARCHAR(255) NOT NULL,
         customerAddress VARCHAR(255) NOT NULL,
+        status INT(1) DEFAULT 1,
         staffID INT,
         FOREIGN KEY (staffID) REFERENCES staff(staffID) ON DELETE SET NULL
     )",

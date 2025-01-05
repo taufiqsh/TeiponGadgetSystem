@@ -48,7 +48,7 @@ function getOrdersByStatus($conn, $customerID, $status)
 function getAllOrderData($conn, $customerID)
 {
     $orderData = [];
-    $statuses = ['Pending Payment', 'Processing Payment', 'Order Shipped', 'Order Completed', 'Order Cancelled'];
+    $statuses = ['Pending Payment', 'Processing Payment', 'Order Shipped', 'Order Completed', 'Order Cancelled', 'Order Rejected'];
 
     foreach ($statuses as $status) {
         $orderData[$status] = getOrdersByStatus($conn, $customerID, $status);
