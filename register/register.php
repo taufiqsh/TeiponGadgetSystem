@@ -25,18 +25,27 @@
           <div class="error-message" id="emailError"></div>
         </div>
 
-
+      <!-- Name -->
         <div class="mb-3">
           <label for="name" class="form-label">Name</label>
           <input type="text" class="form-control" id="name" name="name" placeholder="Enter your name" required>
           <div class="error-message" id="nameError"></div>
         </div>
 
+        <!-- Phone Number -->
         <div class="mb-3">
-          <label for="phoneNumber" class="form-label">Phone Number</label>
-          <input type="text" class="form-control" id="phoneNumber" name="phoneNumber" placeholder="Enter your phone number" required>
-          <div class="error-message" id="phoneNumberError"></div>
+        <label for="phoneNumber" class="form-label">Phone Number</label>
+        <input type="text" class="form-control" id="phoneNumber" name="phoneNumber" placeholder="Enter your phone number" required>
+        <div class="error-message" id="phoneNumberError"></div>
         </div>
+
+      <script>
+        // Restrict input to numbers only
+        const phoneNumberInput = document.getElementById('phoneNumber');
+        phoneNumberInput.addEventListener('input', function (event) {
+          this.value = this.value.replace(/[^0-9]/g, '');
+        });
+      </script>
 
         <!-- State -->
         <div class="mb-3">
