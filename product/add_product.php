@@ -124,8 +124,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <input type="file" class="form-control" id="productImage" name="productImage" accept="image/*">
                 </div>
 
-                <div class="mb-3">
-                    <button type="submit" class="btn btn-primary">Add Product</button>
+                <div class="d-flex justify-content-end gap-3">
+                <button class="btn btn-secondary" onclick="location.href='manage_product.php'; return false;">Back</button>
+                <button type="submit" class="btn btn-primary">Add Product</button>
                 </div>
             </form>
         </div>
