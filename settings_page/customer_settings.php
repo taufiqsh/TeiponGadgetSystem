@@ -75,8 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     <!-- Main Content -->
     <div class="main-content">
-        <div class="container">
-            <h1 class="mb-4">Customer Settings</h1>
+    <div class="container" style="margin-top: 30px; margin-bottom: 30px;">
+        <h1 class="mb-4">Customer Settings</h1>
 
             <!-- Success and Error Messages -->
             <?php if (isset($_GET['success'])): ?>

@@ -16,12 +16,22 @@ $productResult = $conn->query($productQuery);
   <title>Teipon Gadget</title>
   <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
   <link href="../assets/css/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      transition: top 0.3s; /* Smooth transition for hiding/showing the navbar */
+    }
+  </style>
 </head>
 
 <body>
 
   <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-dark border-bottom border-body" data-bs-theme="dark">
+  <nav class="navbar navbar-expand-lg navbar-light bg-dark" data-bs-theme="dark"> <!-- Removed border-bottom -->
     <div class="container justify-content-between">
       <!-- Left Logo -->
       <a href="/TeiponGadgetSystem/home.php" class="navbar-brand d-flex align-items-center">
@@ -44,31 +54,17 @@ $productResult = $conn->query($productQuery);
       <!-- Navbar Items -->
       <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
         <ul class="navbar-nav align-items-center">
-          <!-- Our Products Dropdown -->
-          <li class="nav-item">
-            <a
-              class="nav-link text-white"
-              href="/TeiponGadgetSystem/product/product_listing.php">
-              Our Products
-            </a>
-          </li>
 
-
+        
           <!-- About Us Dropdown -->
           <li class="nav-item dropdown">
             <a
               class="nav-link text-white"
-              href="#">
+              href="#team-section">
               About Us
             </a>
           </li>
 
-          <!-- Cart Icon -->
-          <li class="nav-item">
-            <a class="nav-link position-relative text-white" href="#">
-              <i class="bi bi-cart"></i> <!-- Bootstrap Icons -->
-            </a>
-          </li>
 
           <li class="nav-item dropdown">
               <!-- Login Button -->
@@ -85,6 +81,27 @@ $productResult = $conn->query($productQuery);
   </nav>
 
   <script src="../assets/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let lastScrollTop = 0; // Variable to track scroll position
+
+    // Listen to scroll events
+    window.addEventListener('scroll', function () {
+      let currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+
+      // If scrolling down, hide the navbar
+      if (currentScroll > lastScrollTop) {
+        document.querySelector('.navbar').style.top = "-70px"; // Adjust this value to the height of your navbar
+      } 
+      // If scrolling up, show the navbar
+      else {
+        document.querySelector('.navbar').style.top = "0";
+      }
+      
+      // Update the last scroll position
+      lastScrollTop = currentScroll <= 0 ? 0 : currentScroll; // Prevent negative scroll values
+    });
+  </script>
+
 </body>
 
 </html>
