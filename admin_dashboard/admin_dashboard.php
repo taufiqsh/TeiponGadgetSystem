@@ -29,11 +29,11 @@ $salesResult = $conn->query($salesQuery);
 $totalSales = $salesResult->fetch_assoc()['total_sales'];
 
 // Query to get top-selling products
-$topProductsQuery = "SELECT productName, SUM(quantity) AS total_sold FROM orderproducts INNER JOIN product ON orderproducts.productID = product.productID GROUP BY productName ORDER BY total_sold DESC LIMIT 5";
+$topProductsQuery = 'SELECT product.productName, SUM(orderproducts.quantity) AS total_sold FROM orderproducts INNER JOIN product ON orderproducts.productID = product.productID INNER JOIN orders ON orderproducts.orderID = orders.orderID WHERE orders.orderStatus NOT IN ("Order Cancelled", "Order Rejected") GROUP BY product.productName ORDER BY total_sold DESC LIMIT 5;';
 $topProductsResult = $conn->query($topProductsQuery);
 
 // Query to get recent sales
-$recentSalesQuery = "SELECT orderID, orderDate, totalAmount FROM orders ORDER BY orderDate DESC LIMIT 5";
+$recentSalesQuery = 'SELECT orderID, orderDate, totalAmount FROM orders WHERE orderStatus = "Order Completed" ORDER BY orderDate DESC LIMIT 5';
 $recentSalesResult = $conn->query($recentSalesQuery);
 
 // Close the database connection
@@ -106,7 +106,6 @@ $conn->close();
                   <li><?php echo htmlspecialchars($row['productName']) . ": " . $row['total_sold'] . " units"; ?></li>
                 <?php } ?>
               </ul>
-              <a href="top_products.php" class="btn btn-primary">View Details</a>
             </div>
           </div>
         </div>

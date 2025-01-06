@@ -10,8 +10,30 @@ if (!isset($_SESSION['userID'])) {
 $userID = $_SESSION['userID'];
 
 // Fetch all products from the database
-$sql = "SELECT productID, productName, productDescription, productPrice, productImage FROM Product";
-$result = $conn->query($sql);
+$search = isset($_GET['search']) ? $_GET['search'] : '';
+$minPrice = isset($_GET['minPrice']) && is_numeric($_GET['minPrice']) ? intval($_GET['minPrice']) : 0;
+$maxPrice = isset($_GET['maxPrice']) && is_numeric($_GET['maxPrice']) ? intval($_GET['maxPrice']) : 10000;
+$descriptionFilter = isset($_GET['descriptionFilter']) ? $_GET['descriptionFilter'] : '';
+
+$sql = "SELECT productID, productName, productDescription, productPrice, productImage FROM Product WHERE productPrice BETWEEN ? AND ?";
+$params = [$minPrice, $maxPrice];
+
+if ($search) {
+    $sql .= " AND productName LIKE ?";
+    $likeSearch = "%" . $search . "%";
+    $params[] = $likeSearch;
+}
+
+if ($descriptionFilter) {
+    $sql .= " AND productDescription LIKE ?";
+    $likeDescription = "%" . $descriptionFilter . "%";
+    $params[] = $likeDescription;
+}
+
+$stmt = $conn->prepare($sql);
+$stmt->bind_param(str_repeat("s", count($params)), ...$params);
+$stmt->execute();
+$result = $stmt->get_result();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -22,6 +44,15 @@ $result = $conn->query($sql);
     <title>Customer Home</title>
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        .product-image {
+            width: 300px;
+            height: 300px;
+            object-fit: contain;
+        }
+    </style>
+
 </head>
 
 <body>
@@ -34,11 +65,34 @@ $result = $conn->query($sql);
         </div>
     </section>
 
+    <!-- Search and Filter Bar -->
+    <div class="container my-4">
+        <form method="GET" action="">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="Search for products..." value="<?php echo htmlspecialchars($search); ?>">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" name="minPrice" class="form-control" placeholder="Min Price" value="<?php echo htmlspecialchars($minPrice); ?>">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" name="maxPrice" class="form-control" placeholder="Max Price" value="<?php echo htmlspecialchars($maxPrice); ?>">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" name="descriptionFilter" class="form-control" placeholder="Filter by description" value="<?php echo htmlspecialchars($descriptionFilter); ?>">
+                </div>
+                <div class="col-md-1">
+                    <button class="btn btn-primary w-100" type="submit"><i class="bi bi-search"></i> Filter</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
     <!-- Product Display -->
     <div class="container my-5">
         <div class="row" id="productContainer">
             <?php
-            if ($result->num_rows > 0) {
+            if ($result && $result->num_rows > 0) {
                 while ($row = $result->fetch_assoc()) {
                     $productName = htmlspecialchars($row['productName']);
                     $productDescription = htmlspecialchars($row['productDescription']);
@@ -59,7 +113,7 @@ $result = $conn->query($sql);
                     </div>';
                 }
             } else {
-                echo '<p class="text-center">No products available at the moment.</p>';
+                echo '<p class="text-center">No products match your search and filter criteria.</p>';
             }
             ?>
         </div>
@@ -95,7 +149,7 @@ $result = $conn->query($sql);
                 productName,
                 productPrice,
                 productImage
-            }); // Debug log
+            });
 
             $.ajax({
                 url: '../cart/add_to_cart.php',
@@ -107,13 +161,19 @@ $result = $conn->query($sql);
                     productImage: productImage
                 },
                 success: function(response) {
-                    const responseData = JSON.parse(response);
-                    const cartCountElement = document.getElementById('cartCount');
-                    cartCountElement.innerText = responseData.cartCount; // Update cart count
-                    updateCartModal(responseData.cart); // Update the modal with new cart data
+                    try {
+                        const responseData = JSON.parse(response);
+                        const cartCountElement = document.getElementById('cartCount');
+                        if (responseData.cartCount !== undefined) {
+                            cartCountElement.innerText = responseData.cartCount;
+                        }
+                        updateCartModal(responseData.cart);
+                    } catch (error) {
+                        console.error("Error parsing response:", error);
+                    }
                 },
                 error: function(xhr, status, error) {
-                    console.error("Add to cart error:", status, error); // Debug error
+                    console.error("Add to cart error:", xhr.responseText);
                 }
             });
         }
@@ -132,7 +192,7 @@ $result = $conn->query($sql);
                     <img src="../uploads/${item.image}" alt="${item.name}" class="rounded img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
                     <div>
                         <h6 class="mb-1">${item.name} <small class="text-muted">(x${item.quantity})</small></h6>
-                        <p class="mb-0 text-primary fw-bold">RM ${(Number(item.price)).toLocaleString(2)}</p>
+                        <p class="mb-0 text-primary fw-bold">RM ${(Number(item.price)).toFixed(2)}</p>
                     </div>
                 </div>
                 <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.id})">
@@ -143,25 +203,31 @@ $result = $conn->query($sql);
             });
 
             $('#cartItems').html(cartItemsHTML);
-            $('#cartTotal').text(total.toLocaleString());
+            $('#cartTotal').text(total.toFixed(2));
         }
 
         // Remove product from cart
         function removeFromCart(productId) {
             $.ajax({
-                url: '../cart/remove_from_cart.php', // Backend endpoint for item removal
+                url: '../cart/remove_from_cart.php',
                 method: 'POST',
                 data: {
-                    productID: productId // Pass the specific product ID to be removed
+                    productID: productId
                 },
                 success: function(response) {
-                    const responseData = JSON.parse(response);
-                    updateCartModal(responseData.cart); // Update the modal with the new cart data
-                    const cartCountElement = document.getElementById('cartCount');
-                    cartCountElement.innerText = responseData.cartCount; // Update the cart count
+                    try {
+                        const responseData = JSON.parse(response);
+                        updateCartModal(responseData.cart);
+                        const cartCountElement = document.getElementById('cartCount');
+                        if (responseData.cartCount !== undefined) {
+                            cartCountElement.innerText = responseData.cartCount;
+                        }
+                    } catch (error) {
+                        console.error("Error parsing response:", error);
+                    }
                 },
                 error: function(xhr, status, error) {
-                    console.error("Remove from cart error:", status, error); // Debug error
+                    console.error("Remove from cart error:", xhr.responseText);
                 }
             });
         }
@@ -169,28 +235,23 @@ $result = $conn->query($sql);
         // Initialize the cart modal when the page loads
         $(document).ready(function() {
             $.ajax({
-                url: '../cart/get_cart.php', // Retrieve cart data on page load
+                url: '../cart/get_cart.php',
                 method: 'GET',
                 success: function(response) {
                     try {
-                        const responseData = JSON.parse(response); // Safely parse the response into a JavaScript object
-
-                        // Check if responseData contains the expected 'cart' property
+                        const responseData = JSON.parse(response);
                         if (responseData && responseData.cart) {
                             const cart = responseData.cart || [];
-                            updateCartModal(cart); // Populate the modal with current cart items
-                            // Optionally, update the cart count displayed on the page
+                            updateCartModal(cart);
                             const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
-                            document.getElementById('cartCount').innerText = cartCount; // Update cart count
-                        } else {
-                            console.error("Cart data is missing in the response.");
+                            document.getElementById('cartCount').innerText = cartCount;
                         }
                     } catch (error) {
-                        console.error("Error parsing the cart data:", error); // Debug parsing error
+                        console.error("Error parsing the cart data:", error);
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error("Get cart error:", status, error); // Debug error on request failure
+                    console.error("Get cart error:", xhr.responseText);
                 }
             });
         });

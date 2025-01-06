@@ -21,7 +21,30 @@ $result = $conn->query($sql);
     .product-image {
       width: 300px;
       height: 300px;
-      object-fit: contain; /* Ensures the image covers the 300x300px area without distortion */
+      object-fit: contain;
+    }
+
+    .member-image {
+      width: 150px;
+      height: 165px;
+      object-fit: cover;
+      border-radius: 20%;
+    }
+
+    .about-us-section {
+      background-color: #f8f9fa;
+      padding: 130px 0;
+      /* Increase padding to make it taller */
+    }
+
+    .about-us-heading {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 30px;
+    }
+
+    .container.my-5 {
+      padding: 45px 0;
     }
   </style>
 </head>
@@ -37,7 +60,7 @@ $result = $conn->query($sql);
     </div>
   </section>
 
-  <!-- Main Content -->
+  <!-- Product Section -->
   <div class="container my-5">
     <div class="row" id="productContainer">
       <?php
@@ -61,17 +84,19 @@ $result = $conn->query($sql);
         foreach ($products as $index => $product) {
           echo '
             <div class="col-md-3 col-sm-4 product-item">
-              <div class="text-center">
-                <img src="uploads/' . $product['image'] . '" alt="' . $product['name'] . '" class="img-fluid product-image mb-3">
-                <h5>' . $product['name'] . '</h5>
-                <p>' . $product['description'] . '</p>
-                <p class="fw-bold">Price: RM ' . $product['price'] . '</p>
-                <a href="#" class="btn btn-outline-primary">Buy</a>
+              <div class="card mb-4">
+                <img src="uploads/' . $product['image'] . '" alt="' . $product['name'] . '" class="card-img-top product-image">
+                <div class="card-body">
+                  <h5 class="card-title">' . $product['name'] . '</h5>
+                  <p class="card-text">' . $product['description'] . '</p>
+                  <p class="fw-bold">Price: RM ' . $product['price'] . '</p>
+                  <a href="#" class="btn btn-outline-primary">Buy</a>
+                </div>
               </div>
             </div>';
         }
       } else {
-        echo '<p class="text-center">No products available at the moment.</p>' . $conn->error;
+        echo '<p class="text-center">No products available at the moment.</p>';
       }
       ?>
     </div>
@@ -82,6 +107,38 @@ $result = $conn->query($sql);
       <button id="nextBtn" class="btn btn-secondary" onclick="navigate(1)">Next</button>
     </div>
   </div>
+
+  <!-- About Us Section -->
+  <section id="team-section" class="about-us-section">
+    <div class="container text-center">
+      <h2 class="about-us-heading">About Us</h2>
+      <div class="row">
+        <?php
+        $members = [
+          ["name" => "Hazik Haikal", "role" => "Team Leader", "image" => "members/hazik.jpeg"],
+          ["name" => "Muhammad Naqib", "role" => "Software Requirement Analyst", "image" => "members/naqib.jpeg"],
+          ["name" => "Muhammad Mahdi", "role" => "Software Designer Designergner", "image" => "members/mahdi.jpeg"],
+          ["name" => "Muhammad Luqman", "role" => "Software Tester", "image" => "members/muizz.jpeg"],
+          ["name" => "Eiman Damien", "role" => "Software Developer", "image" => "members/eiman.jpeg"],
+          ["name" => "Mohamad Syazmir", "role" => "Software Developer", "image" => "members/syazmir.jpeg"],
+          ["name" => "Muhammad Taufiq", "role" => "Software Engineer", "image" => "members/taufiq.jpeg"],
+          ["name" => "Syariful Husaini", "role" => "UI/UX Designer", "image" => "members/syariful.jpeg"],
+        ];
+
+        foreach ($members as $member) {
+          echo '
+            <div class="col-md-3 col-sm-6 mb-4">
+              <div class="text-center">
+                <img src="' . $member['image'] . '" alt="' . $member['name'] . '" class="member-image mb-3">
+                <h5>' . htmlspecialchars($member['name']) . '</h5>
+                <p>' . htmlspecialchars($member['role']) . '</p>
+              </div>
+            </div>';
+        }
+        ?>
+      </div>
+    </div>
+  </section>
 
   <!-- Footer -->
   <footer class="bg-light text-center py-4">
@@ -109,11 +166,7 @@ $result = $conn->query($sql);
       items.forEach((item, index) => {
         const startIndex = (currentPage - 1) * productsPerPage;
         const endIndex = startIndex + productsPerPage - 1;
-        if (index >= startIndex && index <= endIndex) {
-          item.style.display = 'block';
-        } else {
-          item.style.display = 'none';
-        }
+        item.style.display = index >= startIndex && index <= endIndex ? 'block' : 'none';
       });
 
       // Disable/enable buttons based on the page
@@ -129,7 +182,3 @@ $result = $conn->query($sql);
 </body>
 
 </html>
-
-<?php
-// $conn->close();
-?>

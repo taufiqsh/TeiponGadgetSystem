@@ -25,6 +25,8 @@
             echo "Incorrect password. Please try again.";
           } elseif ($error_message == 'no_user_found') {
             echo "No user found with that username.";
+          } elseif ($error_message == 'account_disabled') {
+            echo "Your account has been disabled.";
           } else {
             echo "An error occurred. Please try again.";
           }
