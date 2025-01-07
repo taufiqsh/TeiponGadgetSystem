@@ -62,6 +62,13 @@
             }
           </script>
 
+          <!-- Address -->
+          <div class="mb-3">
+            <label for="address" class="form-label">Address</label>
+            <textarea class="form-control" id="address" name="address" rows="3" placeholder="Enter your address" required></textarea>
+            <div class="error-message" id="addressError"></div>
+          </div>
+
           <!-- State -->
           <div class="mb-3">
             <label for="state" class="form-label">State</label>
@@ -93,6 +100,7 @@
             <div class="error-message" id="cityError"></div>
           </div>
 
+  
           <!-- Postal Code -->
           <div class="mb-3">
             <label for="postal_code" class="form-label">Postal Code</label>
@@ -106,13 +114,6 @@
               input.value = input.value.replace(/\D/g, '');
             }
           </script>
-
-          <!-- Address -->
-          <div class="mb-3">
-            <label for="address" class="form-label">Address</label>
-            <textarea class="form-control" id="address" name="address" rows="3" placeholder="Enter your address" required></textarea>
-            <div class="error-message" id="addressError"></div>
-          </div>
 
           <!-- Username -->
           <div class="mb-3">
