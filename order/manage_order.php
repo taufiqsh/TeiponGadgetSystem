@@ -93,12 +93,14 @@ $result = $conn->query($sql);
                             echo "<td>" . htmlspecialchars($row['orderDate']) . "</td>";
                             echo "<td>" . htmlspecialchars($row['totalAmount']) . "</td>";
                             // Displaying order status with a dropdown for inline editing
-                            echo "<td><select class='form-control form-control-sm order-status' data-order-id='" . $row['orderID'] . "' onChange='updateOrderStatus(this)'>
+                            echo "<td><select class='form-control form-control-sm order-status' data-order-id='" . $row['orderID'] . "' onChange='updateOrderStatus(this)' 
+                                        " . ($row['orderStatus'] == 'Order Cancelled' ? 'disabled' : '') . ">
                                     <option value='Pending Payment' " . ($row['orderStatus'] == 'Pending Payment' ? 'selected' : '') . ">Pending Payment</option>
                                     <option value='Processing Payment' " . ($row['orderStatus'] == 'Processing Payment' ? 'selected' : '') . ">Processing Payment</option>
                                     <option value='Order Shipped' " . ($row['orderStatus'] == 'Order Shipped' ? 'selected' : '') . ">Order Shipped</option>
                                     <option value='Order Completed' " . ($row['orderStatus'] == 'Order Completed' ? 'selected' : '') . ">Completed</option>
                                     <option value='Order Cancelled' " . ($row['orderStatus'] == 'Order Cancelled' ? 'selected' : '') . ">Order Cancelled</option>
+                                    <option value='Order Rejected' " . ($row['orderStatus'] == 'Order Rejected' ? 'selected' : '') . ">Order Rejected</option>
                                 </select></td>";
 
 

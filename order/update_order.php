@@ -21,7 +21,8 @@ if (isset($_POST['orderID']) && isset($_POST['status'])) {
         'Processing Payment',
         'Order Completed',
         'Order Shipped',
-        'Order Cancelled'
+        'Order Cancelled',
+        'Order Rejected'
     ];
 
     if (!in_array($status, $validStatuses)) {
