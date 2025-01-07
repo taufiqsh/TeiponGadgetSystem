@@ -50,16 +50,38 @@ $tables = [
             FOREIGN KEY (customerID) REFERENCES customer(customerID) ON DELETE CASCADE,
     FOREIGN KEY (staffID) REFERENCES staff(staffID) ON DELETE SET NULL
     )",
-    "product" => "CREATE TABLE IF NOT EXISTS product (
-        productID INT AUTO_INCREMENT PRIMARY KEY,
-        productName VARCHAR(255) NOT NULL,
-        productDescription TEXT,
-        productPrice DECIMAL(10, 2) NOT NULL,
-        productStock INT NOT NULL,
-        productImage VARCHAR(255) NOT NULL,
-        productCreatedDate DATETIME NOT NULL,
-        staffID INT,
-        FOREIGN KEY (staffID) REFERENCES staff(staffID) ON DELETE SET NULL
+    "product" => "CREATE TABLE IF NOT EXISTS `product` (
+        `productID` INT NOT NULL AUTO_INCREMENT,
+        `productName` VARCHAR(255) NOT NULL,
+        `productBrand` VARCHAR(255) NOT NULL,
+        `productPrice` DECIMAL(10, 2) NOT NULL,
+        `productDescription` TEXT NOT NULL,
+        `productScreenSize` VARCHAR(50) DEFAULT NULL,
+        `productBatteryCapacity` VARCHAR(50) DEFAULT NULL,
+        `productCameraSpecs` VARCHAR(255) DEFAULT NULL,
+        `productProcessor` VARCHAR(255) DEFAULT NULL,
+        `productOS` VARCHAR(50) DEFAULT NULL,
+        `productReleaseDate` DATE DEFAULT NULL,
+        `productImageURL` VARCHAR(255) DEFAULT NULL,
+        `productCreatedAt` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+        `productUpdatedAt` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        `staffID` INT DEFAULT NULL,
+        PRIMARY KEY (`productID`),
+        KEY `staffID` (`staffID`),
+        CONSTRAINT `product_ibfk_1` FOREIGN KEY (`staffID`) REFERENCES `staff` (`staffID`)
+    )",
+    "productvariant" => "CREATE TABLE IF NOT EXISTS `productvariant` (
+        `variantID` INT NOT NULL AUTO_INCREMENT,
+        `productID` INT NOT NULL,
+        `productColor` VARCHAR(50) NOT NULL,
+        `productStorage` INT DEFAULT NULL,
+        `productRam` INT DEFAULT NULL,
+        `productStock` INT NOT NULL DEFAULT '0',
+        `createdAt` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+        `updatedAt` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (`variantID`),
+        KEY `productID` (`productID`),
+        CONSTRAINT `productvariant_ibfk_1` FOREIGN KEY (`productID`) REFERENCES `product` (`productID`) ON DELETE CASCADE
     )",
     "payment" => "CREATE TABLE IF NOT EXISTS payment (
         paymentID INT AUTO_INCREMENT PRIMARY KEY,
