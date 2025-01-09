@@ -8,10 +8,10 @@ if ((!isset($_SESSION['userID']) || !isset($_SESSION['username']))) {
     exit();
 }
 
-// Check if the orderID is set in the URL
-if (isset($_GET['id'])) {
-    // Get the orderID from the URL
-    $orderID = $_GET['id'];
+// Check if the orderID is set in the POST request (since the form sends a POST request)
+if (isset($_POST['orderID'])) {
+    // Get the orderID from the POST data
+    $orderID = $_POST['orderID'];
 
     // Validate that the orderID is an integer
     if (!filter_var($orderID, FILTER_VALIDATE_INT)) {
@@ -50,7 +50,7 @@ if (isset($_GET['id'])) {
     // Close the database connection
     $conn->close();
 } else {
-    // Redirect if no orderID is provided
+    // Redirect if no orderID is provided in the POST request
     header("Location: manage_order.php?error=No order selected for deletion");
     exit();
 }

@@ -21,49 +21,70 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.p
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $productName = $_POST['productName'];
-    $productDescription = $_POST['productDescription'];
+    $productName = trim($_POST['productName']);
+    $productDescription = trim($_POST['productDescription']);
     $productPrice = $_POST['productPrice'];
     $productStock = $_POST['productStock'];
     $productImage = null;
+    $errors = [];
 
-    // Generate a unique filename for the image
-    if (isset($_FILES['productImage']) && $_FILES['productImage']['error'] === UPLOAD_ERR_OK) {
-        $targetDir = "../uploads/";
+    // Validate all fields
+    if (empty($productName)) {
+        $errors[] = "Product name is required.";
+    }
+    if (empty($productDescription)) {
+        $errors[] = "Product description is required.";
+    }
+    if (empty($productPrice) || !is_numeric($productPrice) || $productPrice <= 0) {
+        $errors[] = "Product price must be a positive number.";
+    }
+    if (empty($productStock) || !is_numeric($productStock) || $productStock < 0) {
+        $errors[] = "Product stock must be a non-negative number.";
+    }
+    if (!isset($_FILES['productImage']) || $_FILES['productImage']['error'] !== UPLOAD_ERR_OK) {
+        $errors[] = "Product image is required.";
+    }
 
-        // Generate a unique filename using the current timestamp and the original file extension
-        $fileName = time() . '_' . basename($_FILES['productImage']['name']);
-        $targetFile = $targetDir . $fileName;
-        $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+    // If there are errors, do not proceed
+    if (!empty($errors)) {
+        $errorMessage = implode('<br>', $errors); // Combine all error messages
+    } else {
+        // Handle image upload
+        if ($_FILES['productImage']['error'] === UPLOAD_ERR_OK) {
+            $targetDir = "../uploads/";
+            $fileName = time() . '_' . basename($_FILES['productImage']['name']);
+            $targetFile = $targetDir . $fileName;
+            $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
 
-        // Check if the file is an image
-        $check = getimagesize($_FILES['productImage']['tmp_name']);
-        if ($check !== false) {
-            // Move the uploaded file to the target directory
-            if (move_uploaded_file($_FILES['productImage']['tmp_name'], $targetFile)) {
-                $productImage = $fileName; // Store the unique filename in the database
+            $check = getimagesize($_FILES['productImage']['tmp_name']);
+            if ($check !== false) {
+                if (move_uploaded_file($_FILES['productImage']['tmp_name'], $targetFile)) {
+                    $productImage = $fileName; // Store the file name for the database
+                } else {
+                    $errorMessage = "Failed to upload the image.";
+                }
             } else {
-                $error = "Sorry, there was an error uploading your file.";
+                $errorMessage = "The uploaded file is not a valid image.";
             }
-        } else {
-            $error = "File is not an image.";
+        }
+
+        // Insert into the database
+        if (!isset($errorMessage)) {
+            $createdDate = date("Y-m-d H:i:s");
+            $sql = "INSERT INTO Product (productName, productDescription, productPrice, productStock, productImage, productCreatedDate)
+                    VALUES (?, ?, ?, ?, ?, ?)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ssdiss", $productName, $productDescription, $productPrice, $productStock, $productImage, $createdDate);
+
+            if ($stmt->execute()) {
+                $successMessage = "Product added successfully!";
+            } else {
+                $errorMessage = "Error adding product: " . $conn->error;
+            }
         }
     }
-
-    // Insert the product into the database, including the created date
-    $createdDate = date("Y-m-d H:i:s"); // Current timestamp
-    $sql = "INSERT INTO Product (productName, productDescription, productPrice, productStock, productImage, productCreatedDate)
-            VALUES (?, ?, ?, ?, ?, ?)";
-
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssdiss", $productName, $productDescription, $productPrice, $productStock, $productImage, $createdDate);
-
-    if ($stmt->execute()) {
-        $successMessage = "Product added successfully!";
-    } else {
-        $errorMessage = "Error adding product: " . $conn->error;
-    }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -96,9 +117,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <?php elseif (isset($errorMessage)): ?>
                 <div class="alert alert-danger"><?php echo htmlspecialchars($errorMessage); ?></div>
             <?php endif; ?>
-            
+
             <!-- Add Product Form -->
-            <form action="add_product.php" method="POST" enctype="multipart/form-data">
+            <form id="addProductForm" action="add_product.php" method="POST" enctype="multipart/form-data" onsubmit="return validateForm();">
                 <div class="mb-3">
                     <label for="productName" class="form-label">Product Name</label>
                     <input type="text" class="form-control" id="productName" name="productName" required>
@@ -121,18 +142,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 <div class="mb-3">
                     <label for="productImage" class="form-label">Product Image</label>
-                    <input type="file" class="form-control" id="productImage" name="productImage" accept="image/*">
+                    <input type="file" class="form-control" id="productImage" name="productImage" accept="image/*" required>
                 </div>
 
                 <div class="d-flex justify-content-end gap-3">
-                <button class="btn btn-secondary" onclick="location.href='manage_product.php'; return false;">Back</button>
-                <button type="submit" class="btn btn-primary">Add Product</button>
+                    <button class="btn btn-secondary" onclick="location.href='manage_product.php'; return false;">Back</button>
+                    <button type="submit" class="btn btn-primary">Add Product</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function validateForm() {
+            const productImage = document.getElementById("productImage");
+            if (!productImage.files || productImage.files.length === 0) {
+                alert("Please upload a product image.");
+                return false;
+            }
+            return true; // Proceed with submission if all fields are filled
+        }
+    </script>
 </body>
 
 </html>
