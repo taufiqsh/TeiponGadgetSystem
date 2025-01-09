@@ -21,6 +21,11 @@ $result = $conn->query($sql);
     .product-image {
       width: 300px;
       height: 300px;
+    }
+
+    .product-image {
+      width: 250px;
+      height: 250px;
       object-fit: contain;
     }
 
