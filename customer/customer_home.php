@@ -48,7 +48,7 @@ $result = $stmt->get_result();
     <style>
         .product-image {
             width: 300px;
-            height: 300px;
+            height: 300px !important;
             object-fit: contain;
         }
     </style>

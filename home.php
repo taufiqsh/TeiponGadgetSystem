@@ -2,7 +2,6 @@
 session_start();
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
-
 // Fetch all products from the database
 $sql = "SELECT productName, productDescription, productPrice, productImage FROM Product";
 $result = $conn->query($sql);
@@ -16,11 +15,19 @@ $result = $conn->query($sql);
   <title>Home</title>
   <link href="assets/css/bootstrap.min.css" rel="stylesheet">
   <link href="assets/css/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
   <style>
-    /* Custom styling to ensure all images are 300x300px */
-    .product-image {
-      width: 300px;
+    .product-image-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
       height: 300px;
+    }
+
+    .product-image {
+      max-width: 260px;
+      max-height: 100%;
       object-fit: contain;
     }
 
@@ -46,11 +53,47 @@ $result = $conn->query($sql);
     .container.my-5 {
       padding: 45px 0;
     }
+
+    /* Ensure the arrows are visible and styled correctly */
+    .fas.fa-chevron-left,
+    .fas.fa-chevron-right {
+      visibility: visible !important;
+      opacity: 1 !important;
+      width: 50px;
+      /* Adjust the size of the arrows */
+      color: blue;
+      /* Change arrow color to blue */
+    }
+
+    /* Position the left arrow outside the image area */
+    .carousel-control-prev {
+      left: -150px;
+      /* Move the left arrow to the far left */
+      position: absolute;
+      /* Ensure it’s positioned absolutely */
+      z-index: 1;
+      /* Keep the arrow in front of the carousel */
+    }
+
+    /* Position the right arrow outside the image area */
+    .carousel-control-next {
+      right: -150px;
+      /* Move the right arrow to the far right */
+      position: absolute;
+      /* Ensure it’s positioned absolutely */
+      z-index: 1;
+      /* Keep the arrow in front of the carousel */
+    }
+
+    /* Optional: Removing the outline when clicking the button */
+    .carousel-control-prev:focus,
+    .carousel-control-next:focus {
+      outline: none;
+    }
   </style>
 </head>
 
 <body>
-
   <?php include('navbar/navbar.php'); ?>
 
   <!-- Hero Section -->
@@ -60,51 +103,68 @@ $result = $conn->query($sql);
     </div>
   </section>
 
-  <!-- Product Section -->
+  <!-- Product Carousel Section -->
   <div class="container my-5">
-    <div class="row" id="productContainer">
-      <?php
-      if ($result->num_rows > 0) {
-        $products = [];
-        while ($row = $result->fetch_assoc()) {
-          $productName = !empty($row['productName']) ? htmlspecialchars($row['productName']) : 'Unnamed Product';
-          $productDescription = !empty($row['productDescription']) ? htmlspecialchars($row['productDescription']) : 'No description available.';
-          $productPrice = !empty($row['productPrice']) ? number_format($row['productPrice'], 2) : '0.00';
-          $productImage = !empty($row['productImage']) ? htmlspecialchars($row['productImage']) : 'placeholder.jpg';
+    <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
+      <div class="carousel-inner">
+        <?php
+        if ($result->num_rows > 0) {
+          $products = [];
+          while ($row = $result->fetch_assoc()) {
+            $productName = !empty($row['productName']) ? htmlspecialchars($row['productName']) : 'Unnamed Product';
+            $productDescription = !empty($row['productDescription']) ? htmlspecialchars($row['productDescription']) : 'No description available.';
+            $productPrice = !empty($row['productPrice']) ? number_format($row['productPrice'], 2) : '0.00';
+            $productImage = !empty($row['productImage']) ? htmlspecialchars($row['productImage']) : 'placeholder.jpg';
 
-          $products[] = [
-            'name' => $productName,
-            'description' => $productDescription,
-            'price' => $productPrice,
-            'image' => $productImage
-          ];
+            $products[] = [
+              'name' => $productName,
+              'description' => $productDescription,
+              'price' => $productPrice,
+              'image' => $productImage
+            ];
+          }
+
+          // Display products in slides (4 products per slide)
+          $chunkedProducts = array_chunk($products, 4);
+          foreach ($chunkedProducts as $index => $productGroup) {
+            $isActive = $index === 0 ? 'active' : '';
+            echo '<div class="carousel-item ' . $isActive . '">
+                    <div class="row">';
+            foreach ($productGroup as $product) {
+              echo '
+                  <div class="col-md-3 col-sm-6">
+                    <div class="card mb-4">
+                      <div class="product-image-container">
+                        <img src="uploads/' . htmlspecialchars($product['image']) . '" alt="' . htmlspecialchars($product['name']) . '" class="card-img-top product-image">
+                      </div>
+                      <div class="card-body">
+                        <h5 class="card-title">' . htmlspecialchars($product['name']) . '</h5>
+                        <p class="card-text">' . htmlspecialchars($product['description']) . '</p>
+                        <p class="fw-bold">Price: RM ' . htmlspecialchars($product['price']) . '</p>
+                        <a href="#" class="btn btn-outline-primary" onclick="guestAlert(event)">Buy</a>
+                      </div>
+                    </div>
+                  </div>';
+            }
+            echo '</div></div>';
+          }
+        } else {
+          echo '<p class="text-center">No products available at the moment.</p>';
         }
+        ?>
+      </div>
 
-        // Display products in columns
-        foreach ($products as $index => $product) {
-          echo '
-            <div class="col-md-3 col-sm-4 product-item">
-              <div class="card mb-4">
-                <img src="uploads/' . $product['image'] . '" alt="' . $product['name'] . '" class="card-img-top product-image">
-                <div class="card-body">
-                  <h5 class="card-title">' . $product['name'] . '</h5>
-                  <p class="card-text">' . $product['description'] . '</p>
-                  <p class="fw-bold">Price: RM ' . $product['price'] . '</p>
-                  <a href="#" class="btn btn-outline-primary">Buy</a>
-                </div>
-              </div>
-            </div>';
-        }
-      } else {
-        echo '<p class="text-center">No products available at the moment.</p>';
-      }
-      ?>
-    </div>
-
-    <!-- Navigation buttons -->
-    <div class="d-flex justify-content-center gap-4">
-      <button id="prevBtn" class="btn btn-secondary" onclick="navigate(-1)">Previous</button>
-      <button id="nextBtn" class="btn btn-secondary" onclick="navigate(1)">Next</button>
+      <!-- Carousel Controls -->
+      <?php if ($result->num_rows > 4): ?>
+        <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+          <span class="fas fa-chevron-left" aria-hidden="true"></span>
+          <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+          <span class="fas fa-chevron-right" aria-hidden="true"></span>
+          <span class="visually-hidden">Next</span>
+        </button>
+      <?php endif; ?>
     </div>
   </div>
 
@@ -117,7 +177,7 @@ $result = $conn->query($sql);
         $members = [
           ["name" => "Hazik Haikal", "role" => "Team Leader", "image" => "members/hazik.jpeg"],
           ["name" => "Muhammad Naqib", "role" => "Software Requirement Analyst", "image" => "members/naqib.jpeg"],
-          ["name" => "Muhammad Mahdi", "role" => "Software Designer Designergner", "image" => "members/mahdi.jpeg"],
+          ["name" => "Muhammad Mahdi", "role" => "Software Designer", "image" => "members/mahdi.jpeg"],
           ["name" => "Muhammad Luqman", "role" => "Software Tester", "image" => "members/muizz.jpeg"],
           ["name" => "Eiman Damien", "role" => "Software Developer", "image" => "members/eiman.jpeg"],
           ["name" => "Mohamad Syazmir", "role" => "Software Developer", "image" => "members/syazmir.jpeg"],
@@ -140,44 +200,39 @@ $result = $conn->query($sql);
     </div>
   </section>
 
-  <!-- Footer -->
+  <!-- Bootstrap Modal -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="loginModalLabel">Login Required</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>You need to log in to make a purchase. Press <strong>Login</strong> to proceed to the login page or
+            <strong>Cancel</strong> to stay here.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <a href="login/login.php" class="btn btn-primary">Login</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <footer class="bg-light text-center py-4">
     <p class="mb-0">© Teipon Gadget. All Rights Reserved.</p>
   </footer>
 
   <script src="assets/js/bootstrap.bundle.min.js"></script>
   <script>
-    const productsPerPage = 4; // Number of products shown per page
-    let currentPage = 1;
-
-    // Function to navigate through pages
-    function navigate(direction) {
-      currentPage += direction;
-
-      const items = document.querySelectorAll('.product-item');
-      const totalItems = items.length;
-      const totalPages = Math.ceil(totalItems / productsPerPage);
-
-      // Ensure currentPage stays within bounds
-      if (currentPage < 1) currentPage = 1;
-      if (currentPage > totalPages) currentPage = totalPages;
-
-      // Show/Hide products based on the current page
-      items.forEach((item, index) => {
-        const startIndex = (currentPage - 1) * productsPerPage;
-        const endIndex = startIndex + productsPerPage - 1;
-        item.style.display = index >= startIndex && index <= endIndex ? 'block' : 'none';
-      });
-
-      // Disable/enable buttons based on the page
-      document.getElementById('prevBtn').disabled = currentPage === 1;
-      document.getElementById('nextBtn').disabled = currentPage === totalPages;
+    function guestAlert(event) {
+      event.preventDefault();
+      // Show the Bootstrap modal
+      const modal = new bootstrap.Modal(document.getElementById('loginModal'));
+      modal.show();
     }
-
-    // Initialize product visibility on page load
-    window.onload = function() {
-      navigate(0); // Show the first page by default
-    };
   </script>
 </body>
 
