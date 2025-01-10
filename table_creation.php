@@ -62,7 +62,7 @@ $tables = [
         `productProcessor` VARCHAR(255) DEFAULT NULL,
         `productOS` VARCHAR(50) DEFAULT NULL,
         `productReleaseDate` DATE DEFAULT NULL,
-        `productImageURL` VARCHAR(255) DEFAULT NULL,
+        `productImage` VARCHAR(255) DEFAULT NULL,
         `productCreatedAt` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
         `productUpdatedAt` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         `staffID` INT DEFAULT NULL,
@@ -115,107 +115,7 @@ foreach ($tables as $tableName => $sql) {
     }
 }
 
-$adminUsername = 'admin';
-$adminPassword = '$2a$12$MTkrwrZoblu7LrxeipevJOXIoCwpcR2CsuhssVFgjBKEcmGQLVnLy'; // Pre-hashed bcrypt password
-$adminEmail = 'admin@yopmail.com';
-$adminName = 'Admin User';
 
-$sqlInsertAdmin = "INSERT INTO staff (staffName, staffUsername, staffEmail, staffPassword) 
-                   VALUES (?, ?, ?, ?)";
-
-$stmt = $conn->prepare($sqlInsertAdmin);
-if ($stmt) {
-    $stmt->bind_param("ssss", $adminName, $adminUsername, $adminEmail, $adminPassword);
-    if ($stmt->execute()) {
-        $adminID = $stmt->insert_id; // Get the newly inserted admin's staffID
-
-        // Update the adminID field to point to itself
-        $sqlUpdateAdminID = "UPDATE staff SET adminID = ? WHERE staffID = ?";
-        $updateStmt = $conn->prepare($sqlUpdateAdminID);
-        if ($updateStmt) {
-            $updateStmt->bind_param("ii", $adminID, $adminID);
-            if ($updateStmt->execute()) {
-                echo "Admin ID set for admin user successfully!<br>";
-            } else {
-                echo "Error updating adminID: " . $updateStmt->error . "<br>";
-            }
-            $updateStmt->close();
-        } else {
-            echo "Error preparing adminID update: " . $conn->error . "<br>";
-        }
-    } else {
-        echo "Error inserting admin: " . $stmt->error . "<br>";
-    }
-    $stmt->close();
-} else {
-    echo "Error preparing admin insert: " . $conn->error . "<br>";
-}
-$productData = [
-    [
-        'productName' => 'iPhone 16',
-        'productDescription' => 'The latest iPhone with Bionic chip and advanced dual-camera system.',
-        'productPrice' => 1500.99,
-        'productStock' => 50,
-        'productImage' => '1734372950_iphone_16__c5bvots96jee_xlarge.png',
-        'productCreatedDate' => date('Y-m-d H:i:s'),
-        'staffID' => $adminID // Assuming admin user manages these products
-    ],
-    [
-        'productName' => 'Samsung S24 Ultra',
-        'productDescription' => 'Flagship Samsung phone.',
-        'productPrice' => 1899.99,
-        'productStock' => 40,
-        'productImage' => '1735748792_s24 ultra.jpg',
-        'productCreatedDate' => date('Y-m-d H:i:s'),
-        'staffID' => $adminID
-    ],
-    [
-        'productName' => 'Samsung S24',
-        'productDescription' => 'Flagship Samsung phone.',
-        'productPrice' => 1699.99,
-        'productStock' => 30,
-        'productImage' => '1734556623_s24.png',
-        'productCreatedDate' => date('Y-m-d H:i:s'),
-        'staffID' => $adminID
-    ],
-    [
-        'productName' => 'Iphone 16 Pro Max',
-        'productDescription' => 'High-performance.',
-        'productPrice' => 2000.99,
-        'productStock' => 25,
-        'productImage' => '1734556556_iphone_16pro__erw9alves2qa_xlarge.png',
-        'productCreatedDate' => date('Y-m-d H:i:s'),
-        'staffID' => $adminID
-    ]
-];
-
-$sqlInsertProduct = "INSERT INTO product (productName, productDescription, productPrice, productStock, productImage, productCreatedDate, staffID) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?)";
-
-$stmtProduct = $conn->prepare($sqlInsertProduct);
-if ($stmtProduct) {
-    foreach ($productData as $product) {
-        $stmtProduct->bind_param(
-            "ssdisss",
-            $product['productName'],
-            $product['productDescription'],
-            $product['productPrice'],
-            $product['productStock'],
-            $product['productImage'],
-            $product['productCreatedDate'],
-            $product['staffID']
-        );
-
-        if ($stmtProduct->execute()) {
-            echo "Product '{$product['productName']}' inserted successfully!<br>";
-        } else {
-            echo "Error inserting product '{$product['productName']}': " . $stmtProduct->error . "<br>";
-        }
-    }
-    $stmtProduct->close();
-} else {
-    echo "Error preparing product insert: " . $conn->error . "<br>";
-}
 
 // Close connection
 $conn->close();
@@ -238,6 +138,7 @@ $conn->close();
         <h1 class="mt-5">Setup Complete!</h1>
         <p>The database and tables have been created successfully.</p>
         <button onclick="location.href='home.php';" class="btn btn-primary mt-3">Go to Index</button>
+        <button onclick="location.href='data_insertion.php';" class="btn btn-primary mt-3">Insert Data</button>
     </div>
 </body>
 
