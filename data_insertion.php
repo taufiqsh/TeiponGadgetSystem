@@ -22,6 +22,17 @@ $adminPassword = '$2a$12$MTkrwrZoblu7LrxeipevJOXIoCwpcR2CsuhssVFgjBKEcmGQLVnLy';
 $adminEmail = 'admin@yopmail.com';
 $adminName = 'Admin User';
 
+$custUsername = 'customer';
+$custName = 'Damien';
+$custPassword = '$2a$12$r96rnr2VsaejCUsNGHczaOVnPMQfNtPG72n8QIxEqSywpWr87trWK';
+$custEmail = 'cust@yopmail.com';
+$custPhoneNumber = '+60123456789';
+$custState = 'Selangor';
+$custPostalCode = '43000';
+$custCity = 'Kajang';
+$custAddress = '123, Jalan Kajang, Taman Kajang, 43000 Kajang, Selangor';
+$custStatus = 1;
+
 // Insert admin user
 $sqlInsertAdmin = "INSERT IGNORE INTO staff (staffName, staffUsername, staffEmail, staffPassword) 
                    VALUES ('$adminName', '$adminUsername', '$adminEmail', '$adminPassword')";
@@ -40,6 +51,18 @@ if ($conn->query($sqlInsertAdmin) === TRUE) {
     echo '<div class="alert alert-danger">Error inserting admin: ' . $conn->error . '</div>';
 }
 
+$sqlInsertCustomer = "INSERT INTO customer (
+    customerUsername,customerName , customerPassword,customerEmail,customerPhoneNumber,customerState,customerPostalCode,customerCity,customerAddress,
+    status ) VALUES ('$custUsername','$custName','$custPassword','$custEmail','$custPhoneNumber','$custState','$custPostalCode','$custCity','$custAddress',$custStatus);";
+
+if ($conn->query($sqlInsertCustomer) === TRUE) {
+    $custID = $conn->insert_id;
+    echo '<div class="alert alert-success" role="alert">
+    Customer inserted successfully!
+  </div>';
+} else {
+    echo '<div class="alert alert-danger">Error inserting customer: ' . $conn->error . '</div>';
+}
 
 
 $productValues = "
@@ -164,7 +187,7 @@ $productVariantValues = "
 	(71, 30, 'Sunset Orange', 256, 6, 7, '2025-01-06 16:17:05', '2025-01-06 16:28:42'),
 	(72, 30, 'Sunset Orange', 512, 8, 4, '2025-01-06 16:17:05', '2025-01-06 16:28:42');";
 
-    $sqlInsertProductVariant = "INSERT INTO productvariant (
+$sqlInsertProductVariant = "INSERT INTO productvariant (
         variantID,productID, productColor, productStorage, productRam, 
         productStock, createdAt, updatedAt
     ) VALUES $productVariantValues";
