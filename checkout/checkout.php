@@ -103,48 +103,10 @@ if ($result->num_rows > 0) {
                         <h3>Order Summary</h3>
                     </div>
                     <div class="card-body">
+                    <form action="process_checkout.php" method="POST">
                         <p><strong>Total Price: </strong><span class="price">RM <?= number_format($totalPrice, 2); ?></span></p>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Shipping Information</h3>
-                    </div>
-                    <div class="card-body">
-                        <form action="process_checkout.php" method="POST">
-                            <div class="mb-3">
-                                <label for="shippingName" class="form-label">Name</label>
-                                <input type="text" class="form-control" id="shippingName" name="shippingName" value="<?= htmlspecialchars($customer['customerName']); ?>" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="shippingAddress" class="form-label">Address</label>
-                                <input type="text" class="form-control" id="shippingAddress" name="shippingAddress" value="<?= htmlspecialchars($customer['customerAddress']); ?>" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="shippingState" class="form-label">State</label>
-                                <input type="text" class="form-control" id="shippingState" name="shippingState" value="<?= htmlspecialchars($customer['customerState']); ?>" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="shippingCity" class="form-label">City</label>
-                                <input type="text" class="form-control" id="shippingCity" name="shippingCity" value="<?= htmlspecialchars($customer['customerCity']); ?>" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="shippingPostalCode" class="form-label">Postal Code</label>
-                                <input type="text" class="form-control" id="shippingPostalCode" name="shippingPostalCode" value="<?= htmlspecialchars($customer['customerPostalCode']); ?>" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="shippingPhone" class="form-label">Phone</label>
-                                <input type="text" class="form-control" id="shippingPhone" name="shippingPhone" value="<?= htmlspecialchars($customer['customerPhoneNumber']); ?>" required>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary w-100">Complete Purchase</button>
-                        </form>
+                        <button type="submit" class="btn btn-primary w-100">Complete Purchase</button>
+                    </form>    
                     </div>
                 </div>
             </div>
