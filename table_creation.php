@@ -83,15 +83,6 @@ $tables = [
         KEY `productID` (`productID`),
         CONSTRAINT `productvariant_ibfk_1` FOREIGN KEY (`productID`) REFERENCES `product` (`productID`) ON DELETE CASCADE
     )",
-    "payment" => "CREATE TABLE IF NOT EXISTS payment (
-        paymentID INT AUTO_INCREMENT PRIMARY KEY,
-        paymentStatus VARCHAR(255) NOT NULL,
-        paymentDate DATE NOT NULL,
-        orderID INT NOT NULL,
-        staffID INT,
-        FOREIGN KEY (orderID) REFERENCES `orders`(orderID) ON DELETE CASCADE,
-        FOREIGN KEY (staffID) REFERENCES staff(staffID) ON DELETE SET NULL
-    )",
     "orderProducts" => "CREATE TABLE IF NOT EXISTS orderProducts (
         orderProductId INT AUTO_INCREMENT PRIMARY KEY,
         orderID INT NOT NULL,
@@ -103,6 +94,16 @@ $tables = [
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (orderID) REFERENCES `orders`(orderID) ON DELETE CASCADE,
         FOREIGN KEY (productID) REFERENCES product(productID) ON DELETE CASCADE
+    )",
+    "cart" => "CREATE TABLE IF NOT EXISTS CART (
+        cartID INT AUTO_INCREMENT PRIMARY KEY,
+        productID INT NOT NULL,
+        customerID INT NOT NULL,
+        quantity INT NOT NULL,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (productID) REFERENCES product(productID) ON DELETE CASCADE,
+        FOREIGN KEY (customerID) REFERENCES customer(customerID) ON DELETE CASCADE
     )"
 ];
 

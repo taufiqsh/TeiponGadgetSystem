@@ -33,6 +33,20 @@ $custCity = 'Kajang';
 $custAddress = '123, Jalan Kajang, Taman Kajang, 43000 Kajang, Selangor';
 $custStatus = 1;
 
+$staffName = 'Staff User';
+$staffUsername = 'staff';
+$staffEmail = 'staff@yopmail.com';
+$staffPassword = '$2a$12$A4stCzLxT5UvPuo5gQJSuOYbdcQtgyfPfJYjD9TqEEhmPkqZgUWZO';
+
+$sqlInsertStaff = "INSERT INTO staff (staffName, staffUsername, staffEmail, staffPassword) 
+                   VALUES ('$staffName', '$staffUsername', '$staffEmail', '$staffPassword')";
+
+if ($conn->query($sqlInsertStaff) === TRUE) {
+    echo '<div class="alert alert-success">Staff member inserted successfully!</div>';
+} else {
+    echo '<div class="alert alert-danger">Error inserting staff: ' . $conn->error . '</div>';
+}
+
 // Insert admin user
 $sqlInsertAdmin = "INSERT IGNORE INTO staff (staffName, staffUsername, staffEmail, staffPassword) 
                    VALUES ('$adminName', '$adminUsername', '$adminEmail', '$adminPassword')";
