@@ -29,7 +29,7 @@ $salesResult = $conn->query($salesQuery);
 $totalSales = $salesResult->fetch_assoc()['total_sales'];
 
 // Query to get top-selling products
-$topProductsQuery = 'SELECT product.productName, SUM(orderproducts.quantity) AS total_sold FROM orderproducts INNER JOIN product ON orderproducts.productID = product.productID INNER JOIN orders ON orderproducts.orderID = orders.orderID WHERE orders.orderStatus NOT IN ("Order Cancelled", "Order Rejected") GROUP BY product.productName ORDER BY total_sold DESC LIMIT 5;';
+$topProductsQuery = 'SELECT product.productName, SUM(orderproducts.quantity) AS total_sold FROM orderproducts INNER JOIN product ON orderproducts.productID = product.productID INNER JOIN orders ON orderproducts.orderID = orders.orderID WHERE orders.orderStatus IN ("Order Completed") GROUP BY product.productName ORDER BY total_sold DESC LIMIT 5;';
 $topProductsResult = $conn->query($topProductsQuery);
 
 // Query to get recent sales

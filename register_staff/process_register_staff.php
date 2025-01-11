@@ -7,7 +7,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.p
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   // Check if admin is logged in
   if (!isset($_SESSION['adminID']) && $_POST['role'] === 'admin') {
-    header("Location: ../admin_login/admin_login.php?error=Unauthorized access");
+    header("Location: ../login/login.php?error=Access denied");
     exit();
   }
 

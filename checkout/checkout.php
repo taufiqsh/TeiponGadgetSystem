@@ -2,6 +2,14 @@
 session_start();
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
+// Check if the user is logged in and fetch customer data
+if (!isset($_SESSION['userID'])) {
+    header("Location: ../login/login.php?error=Access denied");
+    exit();
+}
+
+$customerID = $_SESSION['userID'];
+
 // Check if the cart exists in session
 if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
     // Redirect to cart page if cart is empty
@@ -14,14 +22,6 @@ $totalPrice = 0;
 foreach ($cart as $item) {
     $totalPrice += $item['price'] * $item['quantity'];
 }
-
-// Check if the user is logged in and fetch customer data
-if (!isset($_SESSION['userID'])) {
-    header('Location: login.php'); // Redirect if not logged in
-    exit();
-}
-
-$customerID = $_SESSION['userID'];
 
 // Fetch customer data from the database
 $sql = "SELECT customerName, customerAddress, customerState, customerPostalCode, customerCity, customerPhoneNumber FROM customer WHERE customerID = ?";

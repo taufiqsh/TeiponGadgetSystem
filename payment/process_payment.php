@@ -81,28 +81,7 @@ if (move_uploaded_file($fileTmpName, $uploadPath)) {
                 'type' => 'success',
                 'text' => 'Payment receipt uploaded successfully.',
             ];
-            // Display options for redirection
-            echo "
-            <!DOCTYPE html>
-            <html lang='en'>
-            <head>
-                <meta charset='UTF-8'>
-                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-                <title>Payment Complete</title>
-                <link href='../assets/css/bootstrap.min.css' rel='stylesheet'>
-            </head>
-            <body>
-                <div class='container text-center my-5'>
-                    <h1 class='mb-4'>Payment Successful</h1>
-                    <p>Your payment receipt has been uploaded successfully.</p>
-                    <div class='mt-4'>
-                        <a href='../customer/customer_home.php' class='btn btn-primary me-2'>Go to Home</a>
-                        <a href='../payment/view_payment.php?orderID=" . htmlspecialchars($orderID) . "' class='btn btn-secondary'>View Payment</a>
-                    </div>
-                </div>
-                <script src='../assets/js/bootstrap.bundle.min.js'></script>
-            </body>
-            </html>";
+            header("Location: payment.php?orderID=" . htmlspecialchars($_POST['orderID']));
             exit();
         } else {
             $_SESSION['message'] = [

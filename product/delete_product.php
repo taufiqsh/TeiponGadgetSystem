@@ -3,7 +3,7 @@ session_start(); // Start session
 
 // Check if admin or staff is logged in
 if ((!isset($_SESSION['adminID']) && !isset($_SESSION['staffID']))) {
-    header("Location: ../login/login.php?error=Please login to access the dashboard");
+    header("Location: ../login/login.php?error=Access denied");
     exit();
 }
 

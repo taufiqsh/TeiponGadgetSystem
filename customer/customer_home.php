@@ -4,7 +4,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.p
 //dsdasdasda
 // Check if the user is logged in
 if (!isset($_SESSION['userID'])) {
-    header('Location: login.php');
+    header("Location: ../login/login.php?error=Access denied");
     exit();
 }
 $userID = $_SESSION['userID'];
