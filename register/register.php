@@ -25,6 +25,46 @@
           <div class="error-message" id="emailError"></div>
         </div>
 
+        <script>
+          // Real-time Email Check
+          document.getElementById('email').addEventListener('input', function () {
+            const emailInput = this.value.trim();
+            const errorDiv = document.getElementById('emailError');
+            const emailField = document.getElementById('email');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;  // Basic email format
+
+            if (emailInput.length === 0) {
+              errorDiv.textContent = "";
+              emailField.classList.remove('is-invalid');
+            } else if (!emailRegex.test(emailInput)) {
+              errorDiv.textContent = "Please enter a valid email address.";
+              errorDiv.style.color = "red";
+              emailField.classList.add('is-invalid');
+            } else {
+              const xhr = new XMLHttpRequest();
+              xhr.open("POST", "check_register.php", true);  // Reusing check_register.php
+              xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+              xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                  if (xhr.responseText === "taken") {
+                    errorDiv.textContent = "Email is already registered.";
+                    errorDiv.style.color = "red";
+                    emailField.classList.add('is-invalid');
+                  } else {
+                    errorDiv.textContent = "Email is available.";
+                    errorDiv.style.color = "green";
+                    emailField.classList.remove('is-invalid');
+                  }
+                }
+              };
+
+              xhr.send("email=" + encodeURIComponent(emailInput));
+            }
+          });
+        </script>
+
+
         <!-- Name -->
         <div class="mb-3">
           <label for="name" class="form-label">Name</label>
@@ -103,6 +143,7 @@
           <div class="error-message" id="cityError"></div>
         </div>
 
+
         <!-- Postal Code -->
         <div class="mb-3">
           <label for="postal_code" class="form-label">Postal Code</label>
@@ -128,6 +169,43 @@
             required>
           <div class="error-message" id="usernameError"></div>
         </div>
+        <script>
+          // Real-time Username Check
+          document.getElementById('username').addEventListener('input', function () {
+            const usernameInput = this.value.trim();
+            const errorDiv = document.getElementById('usernameError');
+            const usernameField = document.getElementById('username');
+
+            if (usernameInput.length === 0) {
+              errorDiv.textContent = "";
+              usernameField.classList.remove('is-invalid');
+            } else if (usernameInput.length < 4) {
+              errorDiv.textContent = "Username must be at least 4 characters long.";
+              errorDiv.style.color = "red";
+              usernameField.classList.add('is-invalid');
+            } else {
+              const xhr = new XMLHttpRequest();
+              xhr.open("POST", "check_register.php", true);  // Correct URL
+              xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+              xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                  if (xhr.responseText === "taken") {
+                    errorDiv.textContent = "Username is already taken.";
+                    errorDiv.style.color = "red";
+                    usernameField.classList.add('is-invalid');
+                  } else {
+                    errorDiv.textContent = "Username is available.";
+                    errorDiv.style.color = "green";
+                    usernameField.classList.remove('is-invalid');
+                  }
+                }
+              };
+
+              xhr.send("username=" + encodeURIComponent(usernameInput));
+            }
+          });
+        </script>
 
         <!-- Password -->
         <div class="mb-3">
