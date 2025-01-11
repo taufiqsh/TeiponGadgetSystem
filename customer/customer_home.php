@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
-
+//dsdasdasda
 // Check if the user is logged in
 if (!isset($_SESSION['userID'])) {
     header('Location: login.php');
@@ -50,9 +50,44 @@ $result = $stmt->get_result();
             width: 300px;
             height: 300px !important;
             object-fit: contain;
+        }   
+        .product-item {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem; /* Adds spacing inside the box */
+            border: 1px solid #ddd; /* Adds a light gray border */
+            border-radius: 8px; /* Rounds the corners slightly */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Adds a subtle shadow for a modern look */
+            background-color: #fff; /* Ensures a consistent background color */
+            transition: transform 0.2s, box-shadow 0.2s; /* Adds a hover effect */
         }
-    </style>
+        .product-item:hover {
+            transform: translateY(-5px); /* Slightly "lifts" the card */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+            .product-details {
+            flex-grow: 1;
+            margin-bottom: 1rem;
+        }
 
+        .product-price {
+            margin-top: top;
+            font-weight: bold;
+        }
+
+        .product-add-to-cart {
+            margin-top: auto; /* Push the button to the bottom */
+        }
+
+        .button {
+            width: 100%;
+        }
+
+    </style>
 </head>
 
 <body>
@@ -100,15 +135,19 @@ $result = $stmt->get_result();
                     $productImage = htmlspecialchars($row['productImage']);
 
                     echo '
-                    <div class="col-md-3 col-sm-4 product-item">
-                        <div class="text-center">
+                    <div class="col-md-3 col-sm-4 ">
+                        <div class="product-item">
                             <img src="../uploads/' . $productImage . '" alt="' . $productName . '" class="img-fluid product-image mb-3">
-                            <h5>' . $productName . '</h5>
-                            <p>' . $productDescription . '</p>
-                            <p class="fw-bold">Price: RM ' . number_format($productPrice, 2) . '</p>
-                            <button class="btn btn-outline-primary" onclick="addToCart(' . $row['productID'] . ', \'' . addslashes($productName) . '\', ' . $productPrice . ', \'' . addslashes($productImage) . '\')">
-                                Add to Cart
-                            </button>
+                            <div class="product-details">
+                                <h5>' . $productName . '</h5>
+                                <p>' . $productDescription . '</p>
+                            </div>                                  
+                            <p class="product-price">Price: RM ' . number_format($productPrice, 2) . '</p>
+                            <div class="product-add-to-cart">
+                                <button class="btn btn-outline-primary" onclick="addToCart(' . $row['productID'] . ', \'' . addslashes($productName) . '\', ' . $productPrice . ', \'' . addslashes($productImage) . '\')">
+                                    Add to Cart
+                                </button>
+                            </div>
                         </div>
                     </div>';
                 }
