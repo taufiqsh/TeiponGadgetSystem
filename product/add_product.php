@@ -54,9 +54,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($productPrice) || !is_numeric($productPrice) || $productPrice <= 0) {
         $errors[] = "Product price must be a positive number.";
     }
-    if (empty($productVariantStock) || !is_numeric($productVariantStock) || $productVariantStock < 0) {
-        $errors[] = "Product stock must be a non-negative number.";
+    foreach ($productVariantStock as $stock) {
+        if (empty($stock) || !is_numeric($stock) || $stock < 0) {
+            $errors[] = "Product stock must be a non-negative number.";
+        }
     }
+
     if (empty($productColor)) {
         $errors[] = "Product color is required.";
     }
@@ -114,19 +117,35 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if ($stmt->execute()) {
                 $productID = $stmt->insert_id; // Get the ID of the newly inserted product
 
-                // Insert into the productvariant table
-                $variantSql = "INSERT INTO productvariant (productID, productColor, productStorage, 
-                                           productRam, productStock, createdAt, updatedAt)
-                                           VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
-                $variantStmt = $conn->prepare($variantSql);
+                // Insert multiple variants
+                if (!isset($errorMessage)) {
+                    $variantSql = "INSERT INTO productvariant (productID,variantName,productColor, productStorage, 
+                               productRam, productStock, createdAt, updatedAt)
+                               VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
+                    $variantStmt = $conn->prepare($variantSql);
 
-                // Ensure productStorage is treated as a string in the bind_param
-                $variantStmt->bind_param("isisi", $productID, $productColor, $productStorage, $productRam, $productVariantStock);
+                    foreach ($_POST['productColor'] as $index => $color) {
+                        $productVariantName = $_POST['variantName'][$index];
+                        $storage = $_POST['productStorage'][$index];
+                        $ram = $_POST['productRam'][$index];
+                        $stock = $_POST['productVariantStock'][$index];
 
-                if ($variantStmt->execute()) {
-                    $successMessage = "Product and product variant added successfully!";
-                } else {
-                    $errorMessage = "Error adding product variant: " . $conn->error;
+                        // Ensure all fields are valid
+                        if (!empty($color) && !empty($storage) && !empty($ram) && is_numeric($stock)) {
+                            $variantStmt->bind_param("issisi", $productID, $productVariantName, $color, $storage, $ram, $stock);
+                            if (!$variantStmt->execute()) {
+                                $errorMessage = "Error adding product variant: " . $conn->error;
+                                break;
+                            }
+                        } else {
+                            $errorMessage = "Invalid variant data provided.";
+                            break;
+                        }
+                    }
+
+                    if (!isset($errorMessage)) {
+                        $successMessage = "Product and all variants added successfully!";
+                    }
                 }
             } else {
                 $errorMessage = "Error adding product: " . $conn->error;
@@ -147,6 +166,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
+<style>
+    .variant {
+        border: 1px solid #ddd;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 5px;
+    }
+</style>
+
 <body>
     <!-- Sidebar -->
     <?php
@@ -158,109 +186,163 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     ?>
 
     <!-- Main Content -->
-    <div class="main-content">
-        <div class="container">
-            <h1 class="mb-4">Add New Product</h1>
-            <!-- Success or error message -->
-            <?php if (isset($successMessage)): ?>
-                <div class="alert alert-success"><?php echo htmlspecialchars($successMessage); ?></div>
-            <?php elseif (isset($errorMessage)): ?>
-                <div class="alert alert-danger"><?php echo htmlspecialchars($errorMessage); ?></div>
-            <?php endif; ?>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h1 class="mb-4">Add New Product</h1>
 
-            <!-- Add Product Form -->
-            <form id="addProductForm" action="add_product.php" method="POST" enctype="multipart/form-data" onsubmit="return validateForm();">
-                <div class="mb-3">
-                    <label for="productName" class="form-label">Product Name</label>
-                    <input type="text" class="form-control" id="productName" name="productName" required>
-                </div>
+                <!-- Success or error message -->
+                <?php if (isset($successMessage)): ?>
+                    <div class="alert alert-success"><?php echo htmlspecialchars($successMessage); ?></div>
+                <?php elseif (isset($errorMessage)): ?>
+                    <div class="alert alert-danger"><?php echo htmlspecialchars($errorMessage); ?></div>
+                <?php endif; ?>
 
-                <div class="mb-3">
-                    <label for="productBrand" class="form-label">Product Brand</label>
-                    <input type="text" class="form-control" id="productBrand" name="productBrand" required>
-                </div>
+                <!-- Add Product Form -->
+                <form id="addProductForm" action="add_product.php" method="POST" enctype="multipart/form-data" onsubmit="return validateForm();">
+                    <div class="mb-3">
+                        <label for="productName" class="form-label">Product Name</label>
+                        <input type="text" class="form-control" id="productName" name="productName" required>
+                    </div>
 
-                <div class="mb-3">
-                    <label for="productDescription" class="form-label">Product Description</label>
-                    <textarea class="form-control" id="productDescription" name="productDescription" rows="3" required></textarea>
-                </div>
+                    <div class="mb-3">
+                        <label for="productBrand" class="form-label">Product Brand</label>
+                        <input type="text" class="form-control" id="productBrand" name="productBrand" required>
+                    </div>
 
-                <div class="mb-3">
-                    <label for="productPrice" class="form-label">Product Price</label>
-                    <input type="number" class="form-control" id="productPrice" name="productPrice" step="0.01" required>
-                </div>
+                    <div class="mb-3">
+                        <label for="productDescription" class="form-label">Product Description</label>
+                        <textarea class="form-control" id="productDescription" name="productDescription" rows="3" required></textarea>
+                    </div>
 
-                <div class="mb-3">
-                    <label for="productScreenSize" class="form-label">Product Screen Size</label>
-                    <input type="text" class="form-control" id="productScreenSize" name="productScreenSize">
-                </div>
+                    <div class="mb-3">
+                        <label for="productPrice" class="form-label">Product Price</label>
+                        <input type="number" class="form-control" id="productPrice" name="productPrice" step="0.01" required>
+                    </div>
 
-                <div class="mb-3">
-                    <label for="productBatteryCapacity" class="form-label">Product Battery Capacity</label>
-                    <input type="text" class="form-control" id="productBatteryCapacity" name="productBatteryCapacity">
-                </div>
+                    <div class="mb-3">
+                        <label for="productScreenSize" class="form-label">Product Screen Size</label>
+                        <input type="text" class="form-control" id="productScreenSize" name="productScreenSize">
+                    </div>
 
-                <div class="mb-3">
-                    <label for="productCameraSpecs" class="form-label">Product Camera Specifications</label>
-                    <input type="text" class="form-control" id="productCameraSpecs" name="productCameraSpecs">
-                </div>
+                    <div class="mb-3">
+                        <label for="productBatteryCapacity" class="form-label">Product Battery Capacity</label>
+                        <input type="text" class="form-control" id="productBatteryCapacity" name="productBatteryCapacity">
+                    </div>
 
-                <div class="mb-3">
-                    <label for="productProcessor" class="form-label">Product Processor</label>
-                    <input type="text" class="form-control" id="productProcessor" name="productProcessor">
-                </div>
+                    <div class="mb-3">
+                        <label for="productCameraSpecs" class="form-label">Product Camera Specifications</label>
+                        <input type="text" class="form-control" id="productCameraSpecs" name="productCameraSpecs">
+                    </div>
 
-                <div class="mb-3">
-                    <label for="productOS" class="form-label">Product OS</label>
-                    <input type="text" class="form-control" id="productOS" name="productOS">
-                </div>
+                    <div class="mb-3">
+                        <label for="productProcessor" class="form-label">Product Processor</label>
+                        <input type="text" class="form-control" id="productProcessor" name="productProcessor">
+                    </div>
 
-                <div class="mb-3">
-                    <label for="productReleaseDate" class="form-label">Product Release Date</label>
-                    <input type="date" class="form-control" id="productReleaseDate" name="productReleaseDate">
-                </div>
+                    <div class="mb-3">
+                        <label for="productOS" class="form-label">Product OS</label>
+                        <input type="text" class="form-control" id="productOS" name="productOS">
+                    </div>
 
-                <div class="mb-3">
-                    <label for="productImage" class="form-label">Product Image</label>
-                    <input type="file" class="form-control" id="productImage" name="productImage" required>
-                </div>
+                    <div class="mb-3">
+                        <label for="productReleaseDate" class="form-label">Product Release Date</label>
+                        <input type="date" class="form-control" id="productReleaseDate" name="productReleaseDate">
+                    </div>
 
-                <h2>Product Variant</h2>
+                    <div class="mb-3">
+                        <label for="productImage" class="form-label">Product Image</label>
+                        <input type="file" class="form-control" id="productImage" name="productImage" required>
+                    </div>
 
-                <div class="mb-3">
-                    <label for="productColor" class="form-label">Color</label>
-                    <input type="text" class="form-control" id="productColor" name="productColor" required>
-                </div>
+                    <h2>Product Variants</h2>
+                    <div id="variantContainer">
+                        <div class="variant">
+                            <div class="mb-3">
+                                <label for="variantName" class="form-label">Variant Name</label>
+                                <input type="text" class="form-control" name="variantName[]" placeholder="e.g., Black 64GB 8GB RAM" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="productColor" class="form-label">Color</label>
+                                <input type="text" class="form-control" name="productColor[]" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="productStorage" class="form-label">Storage</label>
+                                <select class="form-control" name="productStorage[]" required>
+                                    <option value="">Select Storage</option>
+                                    <option value="64">64GB</option>
+                                    <option value="128">128GB</option>
+                                    <option value="256">256GB</option>
+                                    <option value="512">512GB</option>
+                                    <option value="1">1TB</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="productRam" class="form-label">RAM</label>
+                                <input type="number" class="form-control" name="productRam[]" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="productVariantStock" class="form-label">Stock</label>
+                                <input type="number" class="form-control" name="productVariantStock[]" required>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="addVariant()">Add Variant</button>
 
-                <div class="mb-3">
-                    <label for="productStorage" class="form-label">Storage</label>
-                    <select class="form-control" id="productStorage" name="productStorage" required>
-                        <option value="">Select Storage</option>
-                        <option value="64">64GB</option>
-                        <option value="128">128GB</option>
-                        <option value="256">256GB</option>
-                        <option value="512">512GB</option>
-                        <option value="1">1TB</option>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label for="productRam" class="form-label">RAM</label>
-                    <input type="number" class="form-control" id="productRam" name="productRam" required>
-                </div>
-
-                <div class="mb-3">
-                    <label for="productVariantStock" class="form-label">Stock</label>
-                    <input type="number" class="form-control" id="productVariantStock" name="productVariantStock" required>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Add Product</button>
-                <button class="btn btn-secondary" onclick="location.href='manage_product.php'; return false;">Back</button>
-            </form>
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="submit" class="btn btn-primary">Add Product</button>
+                        <button class="btn btn-secondary" onclick="location.href='manage_product.php'; return false;">Back</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function addVariant() {
+            const variantContainer = document.getElementById('variantContainer');
+            const newVariant = `
+                <div class="variant mt-4 p-3 border rounded">
+                    <div class="mb-3">
+                        <label for="variantName" class="form-label">Variant Name</label>
+                        <input type="text" class="form-control" name="variantName[]" placeholder="e.g., Black 64GB 8GB RAM" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="productColor" class="form-label">Color</label>
+                        <input type="text" class="form-control" name="productColor[]" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="productStorage" class="form-label">Storage</label>
+                        <select class="form-control" name="productStorage[]" required>
+                            <option value="">Select Storage</option>
+                            <option value="64">64GB</option>
+                            <option value="128">128GB</option>
+                            <option value="256">256GB</option>
+                            <option value="512">512GB</option>
+                            <option value="1">1TB</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="productRam" class="form-label">RAM</label>
+                        <input type="number" class="form-control" name="productRam[]" placeholder="e.g., 8" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="productVariantStock" class="form-label">Stock</label>
+                        <input type="number" class="form-control" name="productVariantStock[]" placeholder="e.g., 50" required>
+                    </div>
+                    <button type="button" class="btn btn-danger btn-sm mt-2" onclick="removeVariant(this)">Remove Variant</button>
+                </div>`;
+            variantContainer.insertAdjacentHTML('beforeend', newVariant);
+        }
+
+        function removeVariant(button) {
+            const variant = button.closest('.variant');
+            variant.remove();
+        }
+    </script>
+
+
 </body>
 
 </html>

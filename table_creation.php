@@ -73,6 +73,7 @@ $tables = [
     "productvariant" => "CREATE TABLE IF NOT EXISTS `productvariant` (
         `variantID` INT NOT NULL AUTO_INCREMENT,
         `productID` INT NOT NULL,
+        `variantName`VARCHAR(255) NOT NULL,
         `productColor` VARCHAR(50) NOT NULL,
         `productStorage` INT DEFAULT NULL,
         `productRam` INT DEFAULT NULL,
