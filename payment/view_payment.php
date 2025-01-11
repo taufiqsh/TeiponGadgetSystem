@@ -48,7 +48,7 @@ function getOrdersByStatus($conn, $customerID, $status)
 function getAllOrderData($conn, $customerID)
 {
     $orderData = [];
-    $statuses = ['Pending Payment', 'Processing Payment', 'Order Shipped', 'Order Completed', 'Order Cancelled'];
+    $statuses = ['Pending Payment', 'Processing Payment', 'Order Shipped', 'Order Completed', 'Order Cancelled', 'Order Rejected'];
 
     foreach ($statuses as $status) {
         $orderData[$status] = getOrdersByStatus($conn, $customerID, $status);
@@ -127,20 +127,77 @@ $orderData = getAllOrderData($conn, $customerID);
     <title>View Payment</title>
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 0.75rem;
+        }
+
+        .card-header {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .table th,
+        .table td {
+            vertical-align: middle;
+        }
+
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: #f8f9fa;
+        }
+
+        .table th {
+            background-color: #f1f1f1;
+            font-weight: bold;
+        }
+
+        .modal-content {
+            border-radius: 0.75rem;
+        }
+
+        .nav-tabs .nav-link {
+            border-radius: 0.375rem 0.375rem 0 0;
+            padding: 10px 20px;
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .nav-tabs {
+            margin-bottom: 20px;
+        }
+
+        .action-btns button {
+            margin-right: 10px;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+    </style>
 </head>
 
 <body>
-
     <?php include('../navbar/customer_navbar.php'); ?>
-    <div id="alertContainer" class="position-fixed top-0 start-0 w-100 z-index-10"></div>
-    <div class="container my-5">
+    <!-- Main Content -->
+    <div class="container my-5" style="margin-top: 80px;">
         <h1 class="text-center mb-4">My Purchases</h1>
 
         <!-- Tabs -->
-        <ul class="nav nav-tabs" id="orderTabs" role="tablist">
+        <ul class="nav nav-tabs justify-content-center" id="orderTabs" role="tablist">
             <?php foreach ($orderData as $status => $orders): ?>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link <?= $status === 'Pending Payment' ? 'active' : ''; ?>" id="<?= strtolower(str_replace(' ', '-', $status)) ?>-tab" data-bs-toggle="tab" data-bs-target="#<?= strtolower(str_replace(' ', '-', $status)) ?>" type="button" role="tab" aria-controls="<?= strtolower(str_replace(' ', '-', $status)) ?>" aria-selected="<?= $status === 'Pending Payment' ? 'true' : 'false'; ?>">
+                    <button class="nav-link <?= $status === 'Pending Payment' ? 'active' : ''; ?>"
+                        id="<?= strtolower(str_replace(' ', '-', $status)) ?>-tab" data-bs-toggle="tab"
+                        data-bs-target="#<?= strtolower(str_replace(' ', '-', $status)) ?>" type="button" role="tab"
+                        aria-controls="<?= strtolower(str_replace(' ', '-', $status)) ?>"
+                        aria-selected="<?= $status === 'Pending Payment' ? 'true' : 'false'; ?>">
                         <?= $status ?>
                     </button>
                 </li>
@@ -150,84 +207,96 @@ $orderData = getAllOrderData($conn, $customerID);
         <!-- Tab Content -->
         <div class="tab-content" id="orderTabContent">
             <?php foreach ($orderData as $status => $orders): ?>
-                <div class="tab-pane fade <?= $status === 'Pending Payment' ? 'show active' : ''; ?>" id="<?= strtolower(str_replace(' ', '-', $status)) ?>" role="tabpanel" aria-labelledby="<?= strtolower(str_replace(' ', '-', $status)) ?>-tab">
+                <div class="tab-pane fade <?= $status === 'Pending Payment' ? 'show active' : ''; ?>"
+                    id="<?= strtolower(str_replace(' ', '-', $status)) ?>" role="tabpanel"
+                    aria-labelledby="<?= strtolower(str_replace(' ', '-', $status)) ?>-tab">
                     <?php if (count($orders) > 0): ?>
-                        <table class="table table-bordered mt-3">
-                            <thead>
-                                <tr>
-                                    <th>Order ID</th>
-                                    <th>Order Date</th>
-                                    <th>Total Amount</th>
-                                    <th>Order Status</th>
-                                    <?php if ($status === 'Pending Payment' || $status === 'Order Shipped'): ?>
-                                        <th>Action</th>
-                                    <?php endif; ?>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($orders as $row): ?>
-                                    <tr>
-                                        <td><?= htmlspecialchars($row['orderID']); ?></td>
-                                        <td><?= htmlspecialchars($row['orderDate']); ?></td>
-                                        <td>RM <?= number_format($row['totalAmount'], 2); ?></td>
-                                        <td><?= htmlspecialchars($row['orderStatus']); ?></td>
-                                        <?php if ($status === 'Pending Payment' || $status === 'Order Shipped'): ?>
-                                            <td>
-                                                <!-- Actions for 'Pending Payment' and 'Order Shipped' -->
-                                                <?php if ($status === 'Pending Payment'): ?>
-                                                    <a href="payment.php?orderID=<?= $row['orderID']; ?>" class="btn btn-primary">Make Payment</a>
-                                                    <button class="btn btn-danger" onclick="cancelOrder(<?= $row['orderID']; ?>)">Cancel Order</button>
-                                                <?php elseif ($status === 'Order Shipped'): ?>
-                                                    <button class="btn btn-success" data-order-id="<?= $row['orderID']; ?>">Mark as Completed</button>
-                                                <?php endif; ?>
-                                            </td>
-                                        <?php endif; ?>
-                                    </tr>
-
-                                    <!-- Display the products below the Order ID -->
-                                    <tr>
-                                        <td colspan="<?= $status === 'Pending Payment' || $status === 'Order Shipped' ? 6 : 5; ?>">
-                                            <?php
-                                            $orderProducts = getOrderProducts($conn, $row['orderID']);
-                                            if (count($orderProducts) > 0):
-                                            ?>
-                                                <div class="table-responsive">
-                                                    <table class="table table-striped">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Product Image</th>
-                                                                <th>Product Name</th>
-                                                                <th>Quantity</th>
-                                                                <th>Price</th>
-                                                                <th>Total</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <?php foreach ($orderProducts as $item): ?>
-                                                                <tr>
-                                                                    <td>
-                                                                        <img src="../uploads/<?= htmlspecialchars($item['productImage'] ?? 'default.jpg'); ?>"
-                                                                            alt="Product Image"
-                                                                            class="img-fluid"
-                                                                            style="max-width: 100px; height: auto;">
-                                                                    </td>
-                                                                    <td><?= htmlspecialchars($item['productName']); ?></td>
-                                                                    <td><?= htmlspecialchars($item['quantity']); ?></td>
-                                                                    <td>RM <?= number_format($item['price'], 2); ?></td>
-                                                                    <td>RM <?= number_format($item['quantity'] * $item['price'], 2); ?></td>
-                                                                </tr>
-                                                            <?php endforeach; ?>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            <?php else: ?>
-                                                <p>No products for this order.</p>
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5><?= $status ?> Orders</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-bordered table-striped mt-3">
+                                    <thead>
+                                        <tr>
+                                            <th>Order ID</th>
+                                            <th>Order Date</th>
+                                            <th>Total Amount</th>
+                                            <th>Order Status</th>
+                                            <?php if ($status === 'Pending Payment' || $status === 'Order Shipped'): ?>
+                                                <th>Action</th>
                                             <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($orders as $row): ?>
+                                            <tr>
+                                                <td><?= htmlspecialchars($row['orderID']); ?></td>
+                                                <td><?= htmlspecialchars($row['orderDate']); ?></td>
+                                                <td>RM <?= number_format($row['totalAmount'], 2); ?></td>
+                                                <td><?= htmlspecialchars($row['orderStatus']); ?></td>
+                                                <?php if ($status === 'Pending Payment' || $status === 'Order Shipped'): ?>
+                                                    <td>
+                                                        <div class="action-btns">
+                                                            <?php if ($status === 'Pending Payment'): ?>
+                                                                <a href="payment.php?orderID=<?= $row['orderID']; ?>"
+                                                                    class="btn btn-primary btn-sm">Make Payment</a>
+                                                                <button class="btn btn-danger btn-sm" onclick="cancelOrder(<?= $row['orderID']; ?>)">Cancel Order</button>
+                                                            <?php elseif ($status === 'Order Shipped'): ?>
+                                                                <button class="btn btn-success btn-sm"
+                                                                    data-order-id="<?= $row['orderID']; ?>">Mark as Completed</button>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </td>
+                                                <?php endif; ?>
+                                            </tr>
+
+                                            <!-- Display the products below the Order ID -->
+                                            <tr>
+                                                <td colspan="<?= $status === 'Pending Payment' || $status === 'Order Shipped' ? 6 : 5; ?>">
+                                                    <?php
+                                                    $orderProducts = getOrderProducts($conn, $row['orderID']);
+                                                    if (count($orderProducts) > 0):
+                                                    ?>
+                                                        <div class="table-responsive">
+                                                            <table class="table table-striped">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Product Image</th>
+                                                                        <th>Product Name</th>
+                                                                        <th>Quantity</th>
+                                                                        <th>Price</th>
+                                                                        <th>Total</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <?php foreach ($orderProducts as $item): ?>
+                                                                        <tr>
+                                                                            <td>
+                                                                                <img src="../uploads/<?= htmlspecialchars($item['productImage'] ?? 'default.jpg'); ?>"
+                                                                                    alt="Product Image"
+                                                                                    class="img-fluid"
+                                                                                    style="max-width: 100px; height: auto;">
+                                                                            </td>
+                                                                            <td><?= htmlspecialchars($item['productName']); ?></td>
+                                                                            <td><?= htmlspecialchars($item['quantity']); ?></td>
+                                                                            <td>RM <?= number_format($item['price'], 2); ?></td>
+                                                                            <td>RM <?= number_format($item['quantity'] * $item['price'], 2); ?></td>
+                                                                        </tr>
+                                                                    <?php endforeach; ?>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    <?php else: ?>
+                                                        <p>No products for this order.</p>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
                     <?php else: ?>
                         <p class="text-center mt-3">No orders found in <?= $status; ?>.</p>
@@ -237,74 +306,19 @@ $orderData = getAllOrderData($conn, $customerID);
         </div>
     </div>
 
-    <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="cartModalLabel">Your Cart</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="cartItems"></div>
-                    <h5 class="text-end mt-3">Total: RM <span id="cartTotal">0.00</span></h5>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <a href="../checkout/checkout.php" class="btn btn-primary">Checkout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="cancelOrderModalLabel">Cancel Order</h5>
+                    <h5 class="modal-title" id="cancelOrderModalLabel">Confirm Cancellation</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     Are you sure you want to cancel this order?
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
-                    <button type="button" class="btn btn-danger" id="confirmCancelBtn">Yes</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal for Mark as Completed -->
-    <div class="modal fade" id="completeOrderModal" tabindex="-1" aria-labelledby="completeOrderModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="completeOrderModalLabel">Complete Order</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to mark this order as completed?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
-                    <button type="button" class="btn btn-success" id="confirmCompleteBtn">Yes</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="orderItemsModal" tabindex="-1" aria-labelledby="orderItemsModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="orderItemsModalLabel">Order Items</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Items will be dynamically inserted here -->
-                </div>
-                <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" id="confirmCancelBtn" class="btn btn-danger">Cancel Order</button>
                 </div>
             </div>
         </div>
@@ -350,14 +364,14 @@ $orderData = getAllOrderData($conn, $customerID);
                             <div>
                                 <h6 class="mb-1">${item.name} <small class="text-muted">(x${item.quantity})</small></h6>
                                 <p class="mb-0 text-primary fw-bold">RM ${(Number(item.price)).toLocaleString(                                // Update the cart modal with current cart data
-                                function updateCartModal(cart) {
-                                    var cartItemsHTML = '';
-                                    var total = 0;
-                                
-                                    // Loop through each cart item and display it
-                                    cart.forEach(function(item) {
-                                        total += item.price * item.quantity; // Calculate total price
-                                        cartItemsHTML += `
+                    function updateCartModal(cart) {
+                        var cartItemsHTML = '';
+                        var total = 0;
+
+                        // Loop through each cart item and display it
+                        cart.forEach(function(item) {
+                            total += item.price * item.quantity; // Calculate total price
+                            cartItemsHTML += `
                                         <div class="cart-item card mb-3 shadow-sm">
                                             <div class="card-body d-flex justify-content-between align-items-center gap-3">
                                                 <!-- Image and Details -->
@@ -375,12 +389,12 @@ $orderData = getAllOrderData($conn, $customerID);
                                             </div>
                                         </div>
                                         `;
-                                    });
-                                
-                                    // Update cart content and total
-                                    $('#cartItems').html(cartItemsHTML);
-                                    $('#cartTotal').text(total.toLocaleString()); // Update total price
-                                })}</p>
+                        });
+
+                        // Update cart content and total
+                        $('#cartItems').html(cartItemsHTML);
+                        $('#cartTotal').text(total.toLocaleString()); // Update total price
+                    })}</p>
                             </div>
                         </div>
                         <!-- Remove Button -->
@@ -425,31 +439,38 @@ $orderData = getAllOrderData($conn, $customerID);
 
                 // Proceed with cancelling the order
                 $.ajax({
-                    url: '', // The current page, so the cancellation will be handled here
+                    url: 'cancel_order.php', // Update to point to your cancellation logic handler
                     method: 'POST',
                     data: {
-                        cancelOrder: true, // This will trigger the cancellation logic
+                        cancelOrder: true, // Signal to the server that this is a cancellation request
                         orderID: orderID
                     },
                     success: function(response) {
-                        const result = JSON.parse(response);
-                        if (result.success) {
-                            // Show success message
-                            showAlert('Order has been cancelled.', 'success');
-                            location.reload(); // Refresh the page to update the order status
-                        } else {
-                            // Show error message
-                            showAlert('Failed to cancel the order. Please try again.', 'danger');
+                        try {
+                            const result = JSON.parse(response); // Parse the server's JSON response
+                            if (result.success) {
+                                // Show success message
+                                showAlert('Order has been cancelled.', 'success');
+                                location.reload(); // Refresh the page to update the order status
+                            } else {
+                                // Show error message from server
+                                showAlert(result.message || 'Failed to cancel the order. Please try again.', 'danger');
+                            }
+                        } catch (e) {
+                            console.error('Error parsing response:', e);
+                            // Show error message for invalid JSON response
+                            showAlert('An error occurred while canceling the order.', 'danger');
                         }
                     },
                     error: function(xhr, status, error) {
                         console.error("Error:", status, error);
-                        // Show error message
+                        // Show error message for AJAX errors
                         showAlert('An error occurred while canceling the order.', 'danger');
                     }
                 });
             });
         }
+
 
         // Function to display alerts
         function showAlert(message, type) {
@@ -580,6 +601,22 @@ $orderData = getAllOrderData($conn, $customerID);
                     $('#orderItemsModal').modal('show');
                 }
             });
+        }
+
+        function showAlert(message, type) {
+            const alertBox = document.createElement('div');
+            alertBox.className = `alert alert-${type} alert-dismissible fade show`;
+            alertBox.role = 'alert';
+            alertBox.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+            document.body.prepend(alertBox); // Add the alert to the top of the page
+
+            // Automatically dismiss the alert after 5 seconds
+            setTimeout(() => {
+                alertBox.remove();
+            }, 5000);
         }
     </script>
 </body>

@@ -34,6 +34,7 @@ $tables = [
         customerPostalCode VARCHAR(255) NOT NULL,
         customerCity VARCHAR(255) NOT NULL,
         customerAddress VARCHAR(255) NOT NULL,
+        status INT(1) DEFAULT 1,
         staffID INT,
         FOREIGN KEY (staffID) REFERENCES staff(staffID) ON DELETE SET NULL
     )",
@@ -49,25 +50,38 @@ $tables = [
             FOREIGN KEY (customerID) REFERENCES customer(customerID) ON DELETE CASCADE,
     FOREIGN KEY (staffID) REFERENCES staff(staffID) ON DELETE SET NULL
     )",
-    "product" => "CREATE TABLE IF NOT EXISTS product (
-        productID INT AUTO_INCREMENT PRIMARY KEY,
-        productName VARCHAR(255) NOT NULL,
-        productDescription TEXT,
-        productPrice DECIMAL(10, 2) NOT NULL,
-        productStock INT NOT NULL,
-        productImage VARCHAR(255) NOT NULL,
-        productCreatedDate DATETIME NOT NULL,
-        staffID INT,
-        FOREIGN KEY (staffID) REFERENCES staff(staffID) ON DELETE SET NULL
+    "product" => "CREATE TABLE IF NOT EXISTS `product` (
+        `productID` INT NOT NULL AUTO_INCREMENT,
+        `productName` VARCHAR(255) NOT NULL,
+        `productBrand` VARCHAR(255) NOT NULL,
+        `productPrice` DECIMAL(10, 2) NOT NULL,
+        `productDescription` TEXT NOT NULL,
+        `productScreenSize` VARCHAR(50) DEFAULT NULL,
+        `productBatteryCapacity` VARCHAR(50) DEFAULT NULL,
+        `productCameraSpecs` VARCHAR(255) DEFAULT NULL,
+        `productProcessor` VARCHAR(255) DEFAULT NULL,
+        `productOS` VARCHAR(50) DEFAULT NULL,
+        `productReleaseDate` DATE DEFAULT NULL,
+        `productImage` VARCHAR(255) DEFAULT NULL,
+        `productCreatedAt` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+        `productUpdatedAt` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        `staffID` INT DEFAULT NULL,
+        PRIMARY KEY (`productID`),
+        KEY `staffID` (`staffID`),
+        CONSTRAINT `product_ibfk_1` FOREIGN KEY (`staffID`) REFERENCES `staff` (`staffID`)
     )",
-    "payment" => "CREATE TABLE IF NOT EXISTS payment (
-        paymentID INT AUTO_INCREMENT PRIMARY KEY,
-        paymentStatus VARCHAR(255) NOT NULL,
-        paymentDate DATE NOT NULL,
-        orderID INT NOT NULL,
-        staffID INT,
-        FOREIGN KEY (orderID) REFERENCES `orders`(orderID) ON DELETE CASCADE,
-        FOREIGN KEY (staffID) REFERENCES staff(staffID) ON DELETE SET NULL
+    "productvariant" => "CREATE TABLE IF NOT EXISTS `productvariant` (
+        `variantID` INT NOT NULL AUTO_INCREMENT,
+        `productID` INT NOT NULL,
+        `productColor` VARCHAR(50) NOT NULL,
+        `productStorage` INT DEFAULT NULL,
+        `productRam` INT DEFAULT NULL,
+        `productStock` INT NOT NULL DEFAULT '0',
+        `createdAt` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+        `updatedAt` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (`variantID`),
+        KEY `productID` (`productID`),
+        CONSTRAINT `productvariant_ibfk_1` FOREIGN KEY (`productID`) REFERENCES `product` (`productID`) ON DELETE CASCADE
     )",
     "orderProducts" => "CREATE TABLE IF NOT EXISTS orderProducts (
         orderProductId INT AUTO_INCREMENT PRIMARY KEY,
@@ -80,6 +94,16 @@ $tables = [
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (orderID) REFERENCES `orders`(orderID) ON DELETE CASCADE,
         FOREIGN KEY (productID) REFERENCES product(productID) ON DELETE CASCADE
+    )",
+    "cart" => "CREATE TABLE IF NOT EXISTS CART (
+        cartID INT AUTO_INCREMENT PRIMARY KEY,
+        productID INT NOT NULL,
+        customerID INT NOT NULL,
+        quantity INT NOT NULL,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (productID) REFERENCES product(productID) ON DELETE CASCADE,
+        FOREIGN KEY (customerID) REFERENCES customer(customerID) ON DELETE CASCADE
     )"
 ];
 
@@ -92,107 +116,7 @@ foreach ($tables as $tableName => $sql) {
     }
 }
 
-$adminUsername = 'admin';
-$adminPassword = '$2a$12$MTkrwrZoblu7LrxeipevJOXIoCwpcR2CsuhssVFgjBKEcmGQLVnLy'; // Pre-hashed bcrypt password
-$adminEmail = 'admin@yopmail.com';
-$adminName = 'Admin User';
 
-$sqlInsertAdmin = "INSERT INTO staff (staffName, staffUsername, staffEmail, staffPassword) 
-                   VALUES (?, ?, ?, ?)";
-
-$stmt = $conn->prepare($sqlInsertAdmin);
-if ($stmt) {
-    $stmt->bind_param("ssss", $adminName, $adminUsername, $adminEmail, $adminPassword);
-    if ($stmt->execute()) {
-        $adminID = $stmt->insert_id; // Get the newly inserted admin's staffID
-
-        // Update the adminID field to point to itself
-        $sqlUpdateAdminID = "UPDATE staff SET adminID = ? WHERE staffID = ?";
-        $updateStmt = $conn->prepare($sqlUpdateAdminID);
-        if ($updateStmt) {
-            $updateStmt->bind_param("ii", $adminID, $adminID);
-            if ($updateStmt->execute()) {
-                echo "Admin ID set for admin user successfully!<br>";
-            } else {
-                echo "Error updating adminID: " . $updateStmt->error . "<br>";
-            }
-            $updateStmt->close();
-        } else {
-            echo "Error preparing adminID update: " . $conn->error . "<br>";
-        }
-    } else {
-        echo "Error inserting admin: " . $stmt->error . "<br>";
-    }
-    $stmt->close();
-} else {
-    echo "Error preparing admin insert: " . $conn->error . "<br>";
-}
-$productData = [
-    [
-        'productName' => 'iPhone 16',
-        'productDescription' => 'The latest iPhone with Bionic chip and advanced dual-camera system.',
-        'productPrice' => 1500.99,
-        'productStock' => 50,
-        'productImage' => '1734372950_iphone_16__c5bvots96jee_xlarge.png',
-        'productCreatedDate' => date('Y-m-d H:i:s'),
-        'staffID' => $adminID // Assuming admin user manages these products
-    ],
-    [
-        'productName' => 'Samsung S24 Ultra',
-        'productDescription' => 'Flagship Samsung phone.',
-        'productPrice' => 1899.99,
-        'productStock' => 40,
-        'productImage' => '1735748792_s24 ultra.jpg',
-        'productCreatedDate' => date('Y-m-d H:i:s'),
-        'staffID' => $adminID
-    ],
-    [
-        'productName' => 'Samsung S24',
-        'productDescription' => 'Flagship Samsung phone.',
-        'productPrice' => 1699.99,
-        'productStock' => 30,
-        'productImage' => '1734556623_s24.png',
-        'productCreatedDate' => date('Y-m-d H:i:s'),
-        'staffID' => $adminID
-    ],
-    [
-        'productName' => 'Iphone 16 Pro Max',
-        'productDescription' => 'High-performance.',
-        'productPrice' => 2000.99,
-        'productStock' => 25,
-        'productImage' => '1734556556_iphone_16pro__erw9alves2qa_xlarge.png',
-        'productCreatedDate' => date('Y-m-d H:i:s'),
-        'staffID' => $adminID
-    ]
-];
-
-$sqlInsertProduct = "INSERT INTO product (productName, productDescription, productPrice, productStock, productImage, productCreatedDate, staffID) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?)";
-
-$stmtProduct = $conn->prepare($sqlInsertProduct);
-if ($stmtProduct) {
-    foreach ($productData as $product) {
-        $stmtProduct->bind_param(
-            "ssdisss",
-            $product['productName'],
-            $product['productDescription'],
-            $product['productPrice'],
-            $product['productStock'],
-            $product['productImage'],
-            $product['productCreatedDate'],
-            $product['staffID']
-        );
-
-        if ($stmtProduct->execute()) {
-            echo "Product '{$product['productName']}' inserted successfully!<br>";
-        } else {
-            echo "Error inserting product '{$product['productName']}': " . $stmtProduct->error . "<br>";
-        }
-    }
-    $stmtProduct->close();
-} else {
-    echo "Error preparing product insert: " . $conn->error . "<br>";
-}
 
 // Close connection
 $conn->close();
@@ -215,6 +139,7 @@ $conn->close();
         <h1 class="mt-5">Setup Complete!</h1>
         <p>The database and tables have been created successfully.</p>
         <button onclick="location.href='home.php';" class="btn btn-primary mt-3">Go to Index</button>
+        <button onclick="location.href='data_insertion.php';" class="btn btn-primary mt-3">Insert Data</button>
     </div>
 </body>
 
