@@ -46,10 +46,6 @@ $result = $stmt->get_result();
     <link href="../assets/css/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
-        .product-item {
-            margin-bottom: 30px;
-        }
-
         .product-image {
             width: 150px;
             height: 150px;
@@ -157,7 +153,6 @@ $result = $stmt->get_result();
             margin-bottom: 10px;
             /* Add spacing between rows in case of stacked layout on smaller screens */
         }
-        }   
         .product-item {
             display: flex;
             flex-direction: column;
