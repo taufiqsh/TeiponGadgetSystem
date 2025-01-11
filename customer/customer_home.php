@@ -46,13 +46,118 @@ $result = $stmt->get_result();
     <link href="../assets/css/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
+        .product-item {
+            margin-bottom: 30px;
+        }
+
         .product-image {
-            width: 300px;
-            height: 300px !important;
+            width: 150px;
+            height: 150px;
             object-fit: contain;
         }
-    </style>
 
+        .product-card {
+            width: 300px;
+            /* Fixed width for uniform size */
+            height: 450px;
+            /* Fixed height for consistent layout */
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+            display: flex;
+            flex-direction: column;
+            /* Align elements vertically */
+            justify-content: space-between;
+            /* Space out content */
+            background-color: #fff;
+        }
+
+        .product-card:hover {
+            transform: scale(1.05);
+        }
+
+        .product-card img {
+            max-width: 100%;
+            /* Ensure images don't overflow */
+            max-height: 200px;
+            /* Fixed image height */
+            object-fit: contain;
+            /* Maintain image aspect ratio */
+            margin: 0 auto;
+            /* Center the image horizontally */
+            display: block;
+            /* Ensures the image behaves like a block element */
+        }
+
+        .product-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .product-price {
+            font-size: 1.2rem;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+
+        .product-description {
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .filter-bar {
+            margin-bottom: 20px;
+        }
+
+        .filter-bar input {
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .filter-bar {
+            margin-bottom: 20px;
+            padding: 20px;
+            /* Add padding inside the filter bar */
+            background-color: #f8f9fa;
+            /* Optional: Light background to make it stand out */
+            border-radius: 10px;
+            /* Rounded corners */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            /* Subtle shadow for depth */
+        }
+
+        .filter-bar .form-control {
+            margin-bottom: 0;
+            /* Remove unnecessary bottom margin */
+            padding: 10px;
+            /* Add padding for comfortable typing */
+            border-radius: 8px;
+            /* Smooth, rounded borders */
+        }
+
+        .filter-bar .btn {
+            border-radius: 8px;
+            padding: 10px 15px;
+            /* Ensure the button looks consistent */
+        }
+
+        .filter-bar .col-md-4,
+        .filter-bar .col-md-2,
+        .filter-bar .col-md-3,
+        .filter-bar .col-md-1 {
+            margin-bottom: 10px;
+            /* Add spacing between rows in case of stacked layout on smaller screens */
+        }
+    </style>
 </head>
 
 <body>
@@ -65,33 +170,36 @@ $result = $stmt->get_result();
         </div>
     </section>
 
-    <!-- Search and Filter Bar -->
-    <div class="container my-4">
-        <form method="GET" action="">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <input type="text" name="search" class="form-control" placeholder="Search for products..." value="<?php echo htmlspecialchars($search); ?>">
-                </div>
-                <div class="col-md-2">
-                    <input type="number" name="minPrice" class="form-control" placeholder="Min Price" value="<?php echo htmlspecialchars($minPrice); ?>">
-                </div>
-                <div class="col-md-2">
-                    <input type="number" name="maxPrice" class="form-control" placeholder="Max Price" value="<?php echo htmlspecialchars($maxPrice); ?>">
-                </div>
-                <div class="col-md-3">
-                    <input type="text" name="descriptionFilter" class="form-control" placeholder="Filter by description" value="<?php echo htmlspecialchars($descriptionFilter); ?>">
-                </div>
-                <div class="col-md-1">
-                    <button class="btn btn-primary w-100" type="submit"><i class="bi bi-search"></i> Filter</button>
-                </div>
+    <div class="container filter-bar mt-4">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <input type="text" id="searchInput" class="form-control" placeholder="Search for products...">
             </div>
-        </form>
+            <div class="col-md-2">
+                <input type="number" id="minPriceInput" class="form-control" placeholder="Min Price">
+            </div>
+            <div class="col-md-2">
+                <input type="number" id="maxPriceInput" class="form-control" placeholder="Max Price">
+            </div>
+            <div class="col-md-3">
+                <input type="text" id="descriptionFilterInput" class="form-control" placeholder="Filter by description">
+            </div>
+            <div class="col-md-1">
+                <button class="btn btn-primary w-100" id="filterButton">
+                    <i class="bi bi-search"></i> Filter
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Product Display -->
     <div class="container my-5">
-        <div class="row" id="productContainer">
+        <div class="row" id="productList">
             <?php
+            // Fetch all products from the database (no filters applied)
+            $sql = "SELECT productID, productName, productDescription, productPrice, productImage FROM Product";
+            $result = $conn->query($sql);
+
             if ($result && $result->num_rows > 0) {
                 while ($row = $result->fetch_assoc()) {
                     $productName = htmlspecialchars($row['productName']);
@@ -100,12 +208,15 @@ $result = $stmt->get_result();
                     $productImage = htmlspecialchars($row['productImage']);
 
                     echo '
-                    <div class="col-md-3 col-sm-4 product-item">
-                        <div class="text-center">
+                    <div class="col-md-3 col-sm-4 product-item" 
+                        data-name="' . strtolower($productName) . '" 
+                        data-price="' . $productPrice . '" 
+                        data-description="' . strtolower($productDescription) . '">
+                        <div class="product-card">
                             <img src="../uploads/' . $productImage . '" alt="' . $productName . '" class="img-fluid product-image mb-3">
-                            <h5>' . $productName . '</h5>
-                            <p>' . $productDescription . '</p>
-                            <p class="fw-bold">Price: RM ' . number_format($productPrice, 2) . '</p>
+                            <h5 class="product-name">' . $productName . '</h5>
+                            <p class="product-description">' . $productDescription . '</p>
+                            <p class="product-price">RM ' . number_format($productPrice, 2) . '</p>
                             <button class="btn btn-outline-primary" onclick="addToCart(' . $row['productID'] . ', \'' . addslashes($productName) . '\', ' . $productPrice . ', \'' . addslashes($productImage) . '\')">
                                 Add to Cart
                             </button>
@@ -113,11 +224,39 @@ $result = $stmt->get_result();
                     </div>';
                 }
             } else {
-                echo '<p class="text-center">No products match your search and filter criteria.</p>';
+                echo '<p class="text-center">No products available.</p>';
             }
             ?>
         </div>
     </div>
+
+    <script>
+        // Filter products using JavaScript
+        document.getElementById('filterButton').addEventListener('click', function () {
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
+            const minPrice = parseFloat(document.getElementById('minPriceInput').value) || 0;
+            const maxPrice = parseFloat(document.getElementById('maxPriceInput').value) || Infinity;
+            const descriptionValue = document.getElementById('descriptionFilterInput').value.toLowerCase();
+
+            const productItems = document.querySelectorAll('.product-item');
+
+            productItems.forEach(item => {
+                const name = item.getAttribute('data-name');
+                const price = parseFloat(item.getAttribute('data-price'));
+                const description = item.getAttribute('data-description');
+
+                const matchesSearch = name.includes(searchValue);
+                const matchesPrice = price >= minPrice && price <= maxPrice;
+                const matchesDescription = description.includes(descriptionValue);
+
+                if (matchesSearch && matchesPrice && matchesDescription) {
+                    item.style.display = ''; // Show the product item
+                } else {
+                    item.style.display = 'none'; // Hide the product item
+                }
+            });
+        });
+    </script>
 
     <!-- Cart Modal -->
     <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
@@ -160,7 +299,7 @@ $result = $stmt->get_result();
                     productPrice: productPrice,
                     productImage: productImage
                 },
-                success: function(response) {
+                success: function (response) {
                     try {
                         const responseData = JSON.parse(response);
                         const cartCountElement = document.getElementById('cartCount');
@@ -172,7 +311,7 @@ $result = $stmt->get_result();
                         console.error("Error parsing response:", error);
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error("Add to cart error:", xhr.responseText);
                 }
             });
@@ -214,7 +353,7 @@ $result = $stmt->get_result();
                 data: {
                     productID: productId
                 },
-                success: function(response) {
+                success: function (response) {
                     try {
                         const responseData = JSON.parse(response);
                         updateCartModal(responseData.cart);
@@ -226,18 +365,18 @@ $result = $stmt->get_result();
                         console.error("Error parsing response:", error);
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error("Remove from cart error:", xhr.responseText);
                 }
             });
         }
 
         // Initialize the cart modal when the page loads
-        $(document).ready(function() {
+        $(document).ready(function () {
             $.ajax({
                 url: '../cart/get_cart.php',
                 method: 'GET',
-                success: function(response) {
+                success: function (response) {
                     try {
                         const responseData = JSON.parse(response);
                         if (responseData && responseData.cart) {
@@ -250,7 +389,7 @@ $result = $stmt->get_result();
                         console.error("Error parsing the cart data:", error);
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error("Get cart error:", xhr.responseText);
                 }
             });

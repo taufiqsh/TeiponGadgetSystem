@@ -26,8 +26,8 @@ $result = $conn->query($sql);
     }
 
     .product-image {
-      max-width: 260px;
-      max-height: 100%;
+      width: 250px;
+      height: 250px;
       object-fit: contain;
     }
 
