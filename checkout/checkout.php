@@ -103,48 +103,10 @@ if ($result->num_rows > 0) {
                         <h3>Order Summary</h3>
                     </div>
                     <div class="card-body">
+                    <form action="process_checkout.php" method="POST">
                         <p><strong>Total Price: </strong><span class="price">RM <?= number_format($totalPrice, 2); ?></span></p>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Shipping Information</h3>
-                    </div>
-                    <div class="card-body">
-                        <form action="process_checkout.php" method="POST">
-                            <div class="mb-3">
-                                <label for="shippingName" class="form-label">Name</label>
-                                <input type="text" class="form-control" id="shippingName" name="shippingName" value="<?= htmlspecialchars($customer['customerName']); ?>" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="shippingAddress" class="form-label">Address</label>
-                                <input type="text" class="form-control" id="shippingAddress" name="shippingAddress" value="<?= htmlspecialchars($customer['customerAddress']); ?>" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="shippingState" class="form-label">State</label>
-                                <input type="text" class="form-control" id="shippingState" name="shippingState" value="<?= htmlspecialchars($customer['customerState']); ?>" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="shippingCity" class="form-label">City</label>
-                                <input type="text" class="form-control" id="shippingCity" name="shippingCity" value="<?= htmlspecialchars($customer['customerCity']); ?>" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="shippingPostalCode" class="form-label">Postal Code</label>
-                                <input type="text" class="form-control" id="shippingPostalCode" name="shippingPostalCode" value="<?= htmlspecialchars($customer['customerPostalCode']); ?>" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="shippingPhone" class="form-label">Phone</label>
-                                <input type="text" class="form-control" id="shippingPhone" name="shippingPhone" value="<?= htmlspecialchars($customer['customerPhoneNumber']); ?>" required>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary w-100">Complete Purchase</button>
-                        </form>
+                        <button type="submit" class="btn btn-primary w-100">Complete Purchase</button>
+                    </form>    
                     </div>
                 </div>
             </div>
@@ -152,6 +114,123 @@ if ($result->num_rows > 0) {
     </div>
 
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        // Add product to cart
+        function addToCart(productID, productName, productPrice, productImage) {
+            console.log("Adding to cart:", {
+                productID,
+                productName,
+                productPrice,
+                productImage
+            });
+
+            $.ajax({
+                url: '../cart/add_to_cart.php',
+                method: 'POST',
+                data: {
+                    productID: productID,
+                    productName: productName,
+                    productPrice: productPrice,
+                    productImage: productImage
+                },
+                success: function (response) {
+                    try {
+                        const responseData = JSON.parse(response);
+                        const cartCountElement = document.getElementById('cartCount');
+                        if (responseData.cartCount !== undefined) {
+                            cartCountElement.innerText = responseData.cartCount;
+                        }
+                        updateCartModal(responseData.cart);
+                    } catch (error) {
+                        console.error("Error parsing response:", error);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Add to cart error:", xhr.responseText);
+                }
+            });
+        }
+
+        // Update the cart modal with current cart data
+        function updateCartModal(cart) {
+            let cartItemsHTML = '';
+            let total = 0;
+
+            cart.forEach(item => {
+                total += item.price * item.quantity;
+                cartItemsHTML += `
+        <div class="cart-item card mb-3 shadow-sm">
+            <div class="card-body d-flex justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <img src="../uploads/${item.image}" alt="${item.name}" class="rounded img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                    <div>
+                        <h6 class="mb-1">${item.name} <small class="text-muted">(x${item.quantity})</small></h6>
+                        <p class="mb-0 text-primary fw-bold">RM ${(Number(item.price)).toFixed(2)}</p>
+                    </div>
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.id})">
+                    <i class="bi bi-trash3"></i> Remove
+                </button>
+            </div>
+        </div>`;
+            });
+
+            $('#cartItems').html(cartItemsHTML);
+            $('#cartTotal').text(total.toFixed(2));
+        }
+
+        // Remove product from cart
+        function removeFromCart(productId) {
+            $.ajax({
+                url: '../cart/remove_from_cart.php',
+                method: 'POST',
+                data: {
+                    productID: productId
+                },
+                success: function (response) {
+                    try {
+                        const responseData = JSON.parse(response);
+                        updateCartModal(responseData.cart);
+                        const cartCountElement = document.getElementById('cartCount');
+                        if (responseData.cartCount !== undefined) {
+                            cartCountElement.innerText = responseData.cartCount;
+                        }
+                    } catch (error) {
+                        console.error("Error parsing response:", error);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Remove from cart error:", xhr.responseText);
+                }
+            });
+        }
+
+        // Initialize the cart modal when the page loads
+        $(document).ready(function () {
+            $.ajax({
+                url: '../cart/get_cart.php',
+                method: 'GET',
+                success: function (response) {
+                    try {
+                        const responseData = JSON.parse(response);
+                        if (responseData && responseData.cart) {
+                            const cart = responseData.cart || [];
+                            updateCartModal(cart);
+                            const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
+                            document.getElementById('cartCount').innerText = cartCount;
+                        }
+                    } catch (error) {
+                        console.error("Error parsing the cart data:", error);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Get cart error:", xhr.responseText);
+                }
+            });
+        });
+    </script>
 
 </body>
 

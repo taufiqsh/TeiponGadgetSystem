@@ -241,8 +241,7 @@ $orderData = getAllOrderData($conn, $customerID);
                                                             <?php if ($status === 'Pending Payment'): ?>
                                                                 <a href="payment.php?orderID=<?= $row['orderID']; ?>"
                                                                     class="btn btn-primary btn-sm">Make Payment</a>
-                                                                <button class="btn btn-danger btn-sm"
-                                                                    onclick="cancelOrder(<?= $row['orderID']; ?>)">Cancel Order</button>
+                                                                <button class="btn btn-danger btn-sm" onclick="cancelOrder(<?= $row['orderID']; ?>)">Cancel Order</button>
                                                             <?php elseif ($status === 'Order Shipped'): ?>
                                                                 <button class="btn btn-success btn-sm"
                                                                     data-order-id="<?= $row['orderID']; ?>">Mark as Completed</button>
@@ -258,7 +257,7 @@ $orderData = getAllOrderData($conn, $customerID);
                                                     <?php
                                                     $orderProducts = getOrderProducts($conn, $row['orderID']);
                                                     if (count($orderProducts) > 0):
-                                                        ?>
+                                                    ?>
                                                         <div class="table-responsive">
                                                             <table class="table table-striped">
                                                                 <thead>
@@ -304,6 +303,24 @@ $orderData = getAllOrderData($conn, $customerID);
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
+        </div>
+    </div>
+
+    <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelOrderModalLabel">Confirm Cancellation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to cancel this order?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" id="confirmCancelBtn" class="btn btn-danger">Cancel Order</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -422,31 +439,38 @@ $orderData = getAllOrderData($conn, $customerID);
 
                 // Proceed with cancelling the order
                 $.ajax({
-                    url: '', // The current page, so the cancellation will be handled here
+                    url: 'cancel_order.php', // Update to point to your cancellation logic handler
                     method: 'POST',
                     data: {
-                        cancelOrder: true, // This will trigger the cancellation logic
+                        cancelOrder: true, // Signal to the server that this is a cancellation request
                         orderID: orderID
                     },
                     success: function(response) {
-                        const result = JSON.parse(response);
-                        if (result.success) {
-                            // Show success message
-                            showAlert('Order has been cancelled.', 'success');
-                            location.reload(); // Refresh the page to update the order status
-                        } else {
-                            // Show error message
-                            showAlert('Failed to cancel the order. Please try again.', 'danger');
+                        try {
+                            const result = JSON.parse(response); // Parse the server's JSON response
+                            if (result.success) {
+                                // Show success message
+                                showAlert('Order has been cancelled.', 'success');
+                                location.reload(); // Refresh the page to update the order status
+                            } else {
+                                // Show error message from server
+                                showAlert(result.message || 'Failed to cancel the order. Please try again.', 'danger');
+                            }
+                        } catch (e) {
+                            console.error('Error parsing response:', e);
+                            // Show error message for invalid JSON response
+                            showAlert('An error occurred while canceling the order.', 'danger');
                         }
                     },
                     error: function(xhr, status, error) {
                         console.error("Error:", status, error);
-                        // Show error message
+                        // Show error message for AJAX errors
                         showAlert('An error occurred while canceling the order.', 'danger');
                     }
                 });
             });
         }
+
 
         // Function to display alerts
         function showAlert(message, type) {
@@ -577,6 +601,22 @@ $orderData = getAllOrderData($conn, $customerID);
                     $('#orderItemsModal').modal('show');
                 }
             });
+        }
+
+        function showAlert(message, type) {
+            const alertBox = document.createElement('div');
+            alertBox.className = `alert alert-${type} alert-dismissible fade show`;
+            alertBox.role = 'alert';
+            alertBox.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+            document.body.prepend(alertBox); // Add the alert to the top of the page
+
+            // Automatically dismiss the alert after 5 seconds
+            setTimeout(() => {
+                alertBox.remove();
+            }, 5000);
         }
     </script>
 </body>

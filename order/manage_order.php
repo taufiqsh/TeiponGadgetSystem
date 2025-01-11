@@ -82,6 +82,9 @@ $result = $conn->query($sql);
                     if ($result->num_rows > 0) {
                         // Output data for each row
                         while ($row = $result->fetch_assoc()) {
+                            // Format the order date to DD/MM/YYYY
+                            $formattedOrderDate = date("d-m-Y", strtotime($row['orderDate']));
+
                             // Construct the full path to the receipt file
                             $receiptFullPath = isset($row['receiptPath']) && !empty($row['receiptPath'])
                                 ? '/TeiponGadgetSystem/uploads/receipts/' . htmlspecialchars($row['receiptPath'])
@@ -90,8 +93,9 @@ $result = $conn->query($sql);
                             echo "<tr>";
                             echo "<td>" . $row['orderID'] . "</td>";
                             echo "<td>" . htmlspecialchars($row['customerName']) . "</td>";
-                            echo "<td>" . htmlspecialchars($row['orderDate']) . "</td>";
+                            echo "<td>" . htmlspecialchars($formattedOrderDate) . "</td>"; // Display formatted date
                             echo "<td>" . htmlspecialchars($row['totalAmount']) . "</td>";
+
                             // Displaying order status with a dropdown for inline editing
                             echo "<td><select class='form-control form-control-sm order-status' data-order-id='" . $row['orderID'] . "' onChange='updateOrderStatus(this)' 
                                         " . ($row['orderStatus'] == 'Order Cancelled' ? 'disabled' : '') . ">
@@ -103,7 +107,6 @@ $result = $conn->query($sql);
                                     <option value='Order Rejected' " . ($row['orderStatus'] == 'Order Rejected' ? 'selected' : '') . ">Order Rejected</option>
                                 </select></td>";
 
-
                             // If there's no receipt, show "No Receipt" button, otherwise show the receipt link
                             if (empty($receiptFullPath)) {
                                 echo "<td><button class='btn btn-sm btn-warning' data-bs-toggle='modal' data-bs-target='#noReceiptModal'>No Receipt</button></td>";
@@ -112,9 +115,10 @@ $result = $conn->query($sql);
                             }
 
                             echo "<td class='table-actions'>
-                                <a href='view_order.php?orderID=" . $row['orderID'] . "' class='btn btn-sm btn-info'>View</a>
-                                <a href='#' class='btn btn-sm btn-danger' data-bs-toggle='modal' data-bs-target='#deleteModal" . $row['orderID'] . "'>Delete</a>
-                            </td>";
+    <a href='view_order.php?orderID=" . $row['orderID'] . "' class='btn btn-sm btn-info'>View</a>
+    <button class='btn btn-sm btn-danger' data-bs-toggle='modal' data-bs-target='#deleteModal' data-order-id='" . $row['orderID'] . "'>Delete</button>
+</td>";
+
                             echo "</tr>";
                         }
                     } else {
@@ -125,6 +129,28 @@ $result = $conn->query($sql);
             </table>
         </div>
     </div>
+
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete this order?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form id="deleteForm" method="POST" action="delete_order.php">
+                        <input type="hidden" name="orderID" id="deleteOrderID">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
 
@@ -156,6 +182,16 @@ $result = $conn->query($sql);
             // Send the POST data
             xhr.send("orderID=" + orderID + "&status=" + encodeURIComponent(status));
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const deleteModal = document.getElementById('deleteModal');
+            deleteModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget; // Button that triggered the modal
+                const orderID = button.getAttribute('data-order-id'); // Extract orderID
+                const deleteInput = document.getElementById('deleteOrderID'); // Hidden input in the form
+                deleteInput.value = orderID; // Set the orderID in the hidden input
+            });
+        });
     </script>
 </body>
 

@@ -15,12 +15,26 @@ foreach ($cart as $item) {
 }
 
 $customerID = $_SESSION['userID'];
-$shippingName = $_POST['shippingName'];
-$shippingAddress = $_POST['shippingAddress'];
-$shippingState = $_POST['shippingState'];
-$shippingCity = $_POST['shippingCity'];
-$shippingPostalCode = $_POST['shippingPostalCode'];
-$shippingPhone = $_POST['shippingPhone'];
+
+// Retrieve customer address details from the customer table
+$customerSql = "SELECT customerAddress, customerCity, customerPostalCode, customerState 
+                FROM customer 
+                WHERE customerID = ?";
+$customerStmt = $conn->prepare($customerSql);
+$customerStmt->bind_param("i", $customerID);
+$customerStmt->execute();
+$customerResult = $customerStmt->get_result();
+
+if ($customerResult->num_rows > 0) {
+    $customer = $customerResult->fetch_assoc();
+    $customerAddress = $customer['customerAddress'];
+    $customerCity = $customer['customerCity'];
+    $customerPostalCode = $customer['customerPostalCode'];
+    $customerState = $customer['customerState'];
+} else {
+    echo "Customer address not found.";
+    exit();
+}
 
 // Get current date for the order
 $orderDate = date("Y-m-d");
@@ -29,7 +43,7 @@ $orderDate = date("Y-m-d");
 $orderStatus = 'Pending Payment';
 
 // Create the order in the orders table
-$orderDetails = "Shipping Address: $shippingAddress, $shippingCity, $shippingState, $shippingPostalCode";
+$orderDetails = "Shipping Address: $customerAddress, $customerCity, $customerState, $customerPostalCode";
 $sql = "INSERT INTO orders (orderDetails, orderDate, totalAmount, orderStatus, customerID) 
         VALUES (?, ?, ?, ?, ?)";
 $stmt = $conn->prepare($sql);
@@ -37,7 +51,7 @@ $stmt->bind_param("sssss", $orderDetails, $orderDate, $totalPrice, $orderStatus,
 $stmt->execute();
 $orderID = $stmt->insert_id;  // Get the ID of the newly created order
 
-// Insert products from the cart into orderProducts table (Assuming you have an orderProducts table)
+// Insert products from the cart into orderProducts table
 foreach ($cart as $item) {
     $productID = $item['id'];
     $quantity = $item['quantity'];

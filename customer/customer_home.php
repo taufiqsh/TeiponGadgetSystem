@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
-
+//dsdasdasda
 // Check if the user is logged in
 if (!isset($_SESSION['userID'])) {
     header('Location: login.php');
@@ -44,15 +44,7 @@ $result = $stmt->get_result();
     <title>Customer Home</title>
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-
-    <style>
-        .product-image {
-            width: 300px;
-            height: 300px;
-            object-fit: contain;
-        }
-    </style>
-
+    <link href="customer_home.css" rel="stylesheet">
 </head>
 
 <body>
@@ -65,33 +57,36 @@ $result = $stmt->get_result();
         </div>
     </section>
 
-    <!-- Search and Filter Bar -->
-    <div class="container my-4">
-        <form method="GET" action="">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <input type="text" name="search" class="form-control" placeholder="Search for products..." value="<?php echo htmlspecialchars($search); ?>">
-                </div>
-                <div class="col-md-2">
-                    <input type="number" name="minPrice" class="form-control" placeholder="Min Price" value="<?php echo htmlspecialchars($minPrice); ?>">
-                </div>
-                <div class="col-md-2">
-                    <input type="number" name="maxPrice" class="form-control" placeholder="Max Price" value="<?php echo htmlspecialchars($maxPrice); ?>">
-                </div>
-                <div class="col-md-3">
-                    <input type="text" name="descriptionFilter" class="form-control" placeholder="Filter by description" value="<?php echo htmlspecialchars($descriptionFilter); ?>">
-                </div>
-                <div class="col-md-1">
-                    <button class="btn btn-primary w-100" type="submit"><i class="bi bi-search"></i> Filter</button>
-                </div>
+    <div class="container filter-bar mt-4">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <input type="text" id="searchInput" class="form-control" placeholder="Search for products...">
             </div>
-        </form>
+            <div class="col-md-2">
+                <input type="number" id="minPriceInput" class="form-control" placeholder="Min Price">
+            </div>
+            <div class="col-md-2">
+                <input type="number" id="maxPriceInput" class="form-control" placeholder="Max Price">
+            </div>
+            <div class="col-md-3">
+                <input type="text" id="descriptionFilterInput" class="form-control" placeholder="Filter by description">
+            </div>
+            <div class="col-md-1">
+                <button class="btn btn-primary w-100" id="filterButton">
+                    <i class="bi bi-search"></i> Filter
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Product Display -->
     <div class="container my-5">
-        <div class="row" id="productContainer">
+        <div class="row" id="productList">
             <?php
+            // Fetch all products from the database (no filters applied)
+            $sql = "SELECT productID, productName, productDescription, productPrice, productImage FROM Product";
+            $result = $conn->query($sql);
+
             if ($result && $result->num_rows > 0) {
                 while ($row = $result->fetch_assoc()) {
                     $productName = htmlspecialchars($row['productName']);
@@ -100,12 +95,15 @@ $result = $stmt->get_result();
                     $productImage = htmlspecialchars($row['productImage']);
 
                     echo '
-                    <div class="col-md-3 col-sm-4 product-item">
-                        <div class="text-center">
+                    <div class="col-md-3 col-sm-4 product-item" 
+                        data-name="' . strtolower($productName) . '" 
+                        data-price="' . $productPrice . '" 
+                        data-description="' . strtolower($productDescription) . '">
+                        <div class="product-card">
                             <img src="../uploads/' . $productImage . '" alt="' . $productName . '" class="img-fluid product-image mb-3">
-                            <h5>' . $productName . '</h5>
-                            <p>' . $productDescription . '</p>
-                            <p class="fw-bold">Price: RM ' . number_format($productPrice, 2) . '</p>
+                            <h5 class="product-name">' . $productName . '</h5>
+                            <p class="product-description">' . $productDescription . '</p>
+                            <p class="product-price">RM ' . number_format($productPrice, 2) . '</p>
                             <button class="btn btn-outline-primary" onclick="addToCart(' . $row['productID'] . ', \'' . addslashes($productName) . '\', ' . $productPrice . ', \'' . addslashes($productImage) . '\')">
                                 Add to Cart
                             </button>
@@ -113,11 +111,39 @@ $result = $stmt->get_result();
                     </div>';
                 }
             } else {
-                echo '<p class="text-center">No products match your search and filter criteria.</p>';
+                echo '<p class="text-center">No products available.</p>';
             }
             ?>
         </div>
     </div>
+
+    <script>
+        // Filter products using JavaScript
+        document.getElementById('filterButton').addEventListener('click', function () {
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
+            const minPrice = parseFloat(document.getElementById('minPriceInput').value) || 0;
+            const maxPrice = parseFloat(document.getElementById('maxPriceInput').value) || Infinity;
+            const descriptionValue = document.getElementById('descriptionFilterInput').value.toLowerCase();
+
+            const productItems = document.querySelectorAll('.product-item');
+
+            productItems.forEach(item => {
+                const name = item.getAttribute('data-name');
+                const price = parseFloat(item.getAttribute('data-price'));
+                const description = item.getAttribute('data-description');
+
+                const matchesSearch = name.includes(searchValue);
+                const matchesPrice = price >= minPrice && price <= maxPrice;
+                const matchesDescription = description.includes(descriptionValue);
+
+                if (matchesSearch && matchesPrice && matchesDescription) {
+                    item.style.display = ''; // Show the product item
+                } else {
+                    item.style.display = 'none'; // Hide the product item
+                }
+            });
+        });
+    </script>
 
     <!-- Cart Modal -->
     <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
@@ -160,7 +186,7 @@ $result = $stmt->get_result();
                     productPrice: productPrice,
                     productImage: productImage
                 },
-                success: function(response) {
+                success: function (response) {
                     try {
                         const responseData = JSON.parse(response);
                         const cartCountElement = document.getElementById('cartCount');
@@ -172,7 +198,7 @@ $result = $stmt->get_result();
                         console.error("Error parsing response:", error);
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error("Add to cart error:", xhr.responseText);
                 }
             });
@@ -214,7 +240,7 @@ $result = $stmt->get_result();
                 data: {
                     productID: productId
                 },
-                success: function(response) {
+                success: function (response) {
                     try {
                         const responseData = JSON.parse(response);
                         updateCartModal(responseData.cart);
@@ -226,18 +252,18 @@ $result = $stmt->get_result();
                         console.error("Error parsing response:", error);
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error("Remove from cart error:", xhr.responseText);
                 }
             });
         }
 
         // Initialize the cart modal when the page loads
-        $(document).ready(function() {
+        $(document).ready(function () {
             $.ajax({
                 url: '../cart/get_cart.php',
                 method: 'GET',
-                success: function(response) {
+                success: function (response) {
                     try {
                         const responseData = JSON.parse(response);
                         if (responseData && responseData.cart) {
@@ -250,7 +276,7 @@ $result = $stmt->get_result();
                         console.error("Error parsing the cart data:", error);
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error("Get cart error:", xhr.responseText);
                 }
             });
