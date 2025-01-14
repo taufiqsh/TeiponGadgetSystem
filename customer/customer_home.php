@@ -131,10 +131,6 @@ $result = $stmt->get_result();
                 success: function(response) {
                     try {
                         const product = JSON.parse(response);
-
-                        console.log("Product details:", product);
-                        console.log("Product name", product.productName); // Debugging response
-
                         if (product) {
                             // Use fallback values for price and variants
                             const productPrice = Number(product.productPrice) || 0;
@@ -144,8 +140,6 @@ $result = $stmt->get_result();
                                     return `<option value="${variant.variantID}">${variant.variantName} (+RM ${variantPrice.toFixed(2)})</option>`;
                                 }).join('') :
                                 '<option disabled>No variants available</option>';
-
-                            console.log("Product variants", variantsHTML);
 
                             const modalHTML = `
                         <div class="modal fade" id="productDetailsModal_${product.productID}" tabindex="-1" aria-labelledby="productName_${product.productID}">
@@ -258,18 +252,6 @@ $result = $stmt->get_result();
 
             const productName = productNameElement.innerText;
             const productPrice = Number(productPriceElement.innerText.replace('Price: RM ', '').trim());
-
-            console.log("Adding to cart:", {
-                productID,
-                productName,
-                productPrice,
-                productImage,
-                variantID: parseInt(variantID, 10),
-                quantity: parseInt(quantity, 10),
-                createdAt,
-                updatedAt
-            });
-
             $.ajax({
                 url: '../cart/add_to_cart.php',
                 method: 'POST',
@@ -284,21 +266,15 @@ $result = $stmt->get_result();
                     updatedAt: updatedAt
                 },
                 success: function(response) {
-                    console.log("Server response:", response); // Log raw response
 
                     try {
                         const responseData = JSON.parse(response);
-                        console.log("Product ID", responseData.productID);
-                        console.log("Cart : " + responseData.cart);
-                        console.log("Parsed responseData:", responseData);
-                        console.log("Cart count:", responseData.cartCount);
 
                         let successMessagesElement = document.getElementById('successMessages');
                         if (!successMessagesElement) {
                             successMessagesElement = document.createElement('div');
                             successMessagesElement.id = 'successMessages';
                             document.body.appendChild(successMessagesElement);
-                            console.log("successMessages div created and appended");
                         }
 
                         // Show success message if the server response is correct
@@ -325,7 +301,6 @@ $result = $stmt->get_result();
 
                             // Update cart modal (refresh cart after adding item)
                             if (responseData.cart) {
-                                console.log("Cart updated with new data:", responseData.cart);
                                 updateCartModal(responseData.cart);
                             }
 
@@ -347,7 +322,6 @@ $result = $stmt->get_result();
         }
         // Update the cart modal with current cart data
         function updateCartModal(cart) {
-            console.log("Updating modal with cart:", cart); // Debug log to see the cart data
             let cartItemsHTML = '';
             let total = 0;
 
@@ -401,8 +375,6 @@ $result = $stmt->get_result();
         
         // Remove product from cart
         function removeFromCart(productID, variantID) {
-            console.log("Removing from cart with productID:", productID, "and variantID:", variantID); // Debug log to check values
-
             $.ajax({
                 url: '../cart/remove_from_cart.php',
                 method: 'POST',
@@ -413,8 +385,6 @@ $result = $stmt->get_result();
                 success: function(response) {
                     try {
                         const responseData = JSON.parse(response);
-                        console.log("Response from server:", response); // Debug log for server response
-
                         if (responseData.error) {
                             console.error("Error:", responseData.error);
                             return;

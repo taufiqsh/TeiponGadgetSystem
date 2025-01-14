@@ -163,13 +163,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <script>
         // Add product to cart
         function addToCart(productID, productName, productPrice, productImage) {
-            console.log("Adding to cart:", {
-                productID,
-                productName,
-                productPrice,
-                productImage
-            });
-
             $.ajax({
                 url: '../cart/add_to_cart.php',
                 method: 'POST',

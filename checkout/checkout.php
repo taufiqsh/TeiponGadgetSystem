@@ -135,7 +135,6 @@ while ($item = $result->fetch_assoc()) {
 
     <script>
         function updateCartModal(cart) {
-            console.log("Updating modal with cart:", cart); // Debug log to see the cart data
             let cartItemsHTML = '';
             let total = 0;
 
