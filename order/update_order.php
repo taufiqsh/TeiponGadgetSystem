@@ -3,7 +3,7 @@ session_start();
 
 // Check if the user is logged in and authorized
 if (!isset($_SESSION['userID'])) {
-    echo "error";
+    header("Location: ../login/login.php?error=Access denied");
     exit();
 }
 

@@ -2,13 +2,14 @@
 session_start();
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
-// Check if the user is logged in
+// Check if the user is logged in and fetch customer data
 if (!isset($_SESSION['userID'])) {
-    header('Location: login.php'); // Redirect if not logged in
+    header("Location: ../login/login.php?error=Access denied");
     exit();
 }
 
 $customerID = $_SESSION['userID'];
+
 
 // Fetch cart items from the database for the logged-in user, including variant information
 $sql = "

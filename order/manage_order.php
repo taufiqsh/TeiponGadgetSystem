@@ -4,7 +4,7 @@ session_start(); // Start session
 // Check if admin or staff is logged in
 if ((!isset($_SESSION['userID']) || !isset($_SESSION['username']))) {
     // Redirect to the appropriate login page
-    header("Location: ../login/login.php?error=Please login to access the dashboard");
+    header("Location: ../login/login.php?error=Access denied");
     exit();
 }
 
@@ -97,15 +97,15 @@ $result = $conn->query($sql);
                             echo "<td>" . htmlspecialchars($row['totalAmount']) . "</td>";
 
                             // Displaying order status with a dropdown for inline editing
-                            echo "<td><select class='form-control form-control-sm order-status' data-order-id='" . $row['orderID'] . "' onChange='updateOrderStatus(this)' 
-                                        " . ($row['orderStatus'] == 'Order Cancelled' ? 'disabled' : '') . ">
-                                    <option value='Pending Payment' " . ($row['orderStatus'] == 'Pending Payment' ? 'selected' : '') . ">Pending Payment</option>
-                                    <option value='Processing Payment' " . ($row['orderStatus'] == 'Processing Payment' ? 'selected' : '') . ">Processing Payment</option>
-                                    <option value='Order Shipped' " . ($row['orderStatus'] == 'Order Shipped' ? 'selected' : '') . ">Order Shipped</option>
-                                    <option value='Order Completed' " . ($row['orderStatus'] == 'Order Completed' ? 'selected' : '') . ">Completed</option>
-                                    <option value='Order Cancelled' " . ($row['orderStatus'] == 'Order Cancelled' ? 'selected' : '') . ">Order Cancelled</option>
-                                    <option value='Order Rejected' " . ($row['orderStatus'] == 'Order Rejected' ? 'selected' : '') . ">Order Rejected</option>
-                                </select></td>";
+                            echo "<td><select class='form-control form-control-sm order-status' data-order-id='" . $row['orderID'] . "' onChange='updateOrderStatus(this)'
+                                     " . ($row['orderStatus'] == 'Order Cancelled' ? 'disabled' : '') . ">
+                             <option value='Pending Payment' " . ($row['orderStatus'] == 'Pending Payment' ? 'selected' : '') . ">Pending Payment</option>
+                            <option value='Processing Payment' " . ($row['orderStatus'] == 'Processing Payment' ? 'selected' : '') . ">Processing Payment</option>
+                            <option value='Order Shipped' " . ($row['orderStatus'] == 'Order Shipped' ? 'selected' : '') . ">Order Shipped</option>
+                            <option value='Order Completed' " . ($row['orderStatus'] == 'Order Completed' ? 'selected' : '') . ">Completed</option>
+                            <option value='Order Rejected' " . ($row['orderStatus'] == 'Order Rejected' ? 'selected' : '') . ">Order Rejected</option>
+                            <option value='Order Cancelled' " . ($row['orderStatus'] == 'Order Cancelled' ? 'selected' : '') . " disabled>Order Cancelled</option>
+                            </select></td>";
 
                             // If there's no receipt, show "No Receipt" button, otherwise show the receipt link
                             if (empty($receiptFullPath)) {
@@ -164,7 +164,7 @@ $result = $conn->query($sql);
             xhr.open("POST", "update_order.php", true);
             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
-            xhr.onreadystatechange = function() {
+            xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4) {
                     if (xhr.status === 200) {
                         if (xhr.responseText.trim() === "success") {
@@ -185,7 +185,7 @@ $result = $conn->query($sql);
 
         document.addEventListener('DOMContentLoaded', () => {
             const deleteModal = document.getElementById('deleteModal');
-            deleteModal.addEventListener('show.bs.modal', function(event) {
+            deleteModal.addEventListener('show.bs.modal', function (event) {
                 const button = event.relatedTarget; // Button that triggered the modal
                 const orderID = button.getAttribute('data-order-id'); // Extract orderID
                 const deleteInput = document.getElementById('deleteOrderID'); // Hidden input in the form

@@ -6,7 +6,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.p
 function checkLogin()
 {
     if (!isset($_SESSION['userID'])) {
-        header("Location: ../login/login.php");
+        header("Location: ../login/login.php?error=Access denied");
         exit();
     }
     return $_SESSION['userID'];

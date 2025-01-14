@@ -4,7 +4,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.p
 
 // Check if the customer is logged in
 if (!isset($_SESSION['userID'])) {
-    header("Location: login.php");
+    header("Location: ../login/login.php?error=Access denied");
     exit();
 }
 
@@ -38,6 +38,8 @@ $qrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?data=" . urlencode($pa
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment</title>
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -47,10 +49,15 @@ $qrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?data=" . urlencode($pa
         <h1 class="text-center mb-4">Payment for Order #<?= $order['orderID']; ?></h1>
 
         <?php if (isset($_SESSION['message'])): ?>
-            <div class="alert alert-<?= $_SESSION['message']['type']; ?>">
-                <?= htmlspecialchars($_SESSION['message']['text']); ?>
-            </div>
-            <?php unset($_SESSION['message']); // Clear the message after displaying 
+            <script>
+                Swal.fire({
+                    icon: '<?= htmlspecialchars($_SESSION['message']['type']); ?>',
+                    title: '<?= htmlspecialchars($_SESSION['message']['text']); ?>',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            </script>
+            <?php unset($_SESSION['message']);
             ?>
         <?php endif; ?>
 

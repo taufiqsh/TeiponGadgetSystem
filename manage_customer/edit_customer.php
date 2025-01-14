@@ -4,7 +4,7 @@ session_start(); // Start session
 // Check if the admin is logged in
 if (!(isset($_SESSION['userID']))) {
     // Redirect to the login page if neither is logged in
-    header("Location: ../login/login.php?error=Please login to access the dashboard");
+    header("Location: ../login/login.php?error=Access denied");
     exit();
 }
 
@@ -18,7 +18,7 @@ if (isset($_GET['id'])) {
     $stmt->bind_param("i", $customerID);
     $stmt->execute();
     $result = $stmt->get_result();
-    
+
     if ($result->num_rows > 0) {
         $customer = $result->fetch_assoc();
     } else {

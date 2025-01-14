@@ -3,7 +3,7 @@ session_start(); // Start session
 
 // Check if the customer is logged in
 if (!isset($_SESSION['userID']) || !isset($_SESSION['username'])) {
-    header("Location: ../login/login.php?error=" . urlencode("Please login to access the settings"));
+    header("Location: ../login/login.php?error=Access denied");
     exit();
 }
 

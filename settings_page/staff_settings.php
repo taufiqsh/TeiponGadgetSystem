@@ -3,7 +3,7 @@ session_start(); // Start session
 
 // Check if the staff is logged in
 if (!isset($_SESSION['userID']) || !isset($_SESSION['username'])) {
-    header("Location: ../staff_login/staff_login.php?error=Please login to access the settings");
+    header("Location: ../login/login.php?error=Access denied");
     exit();
 }
 

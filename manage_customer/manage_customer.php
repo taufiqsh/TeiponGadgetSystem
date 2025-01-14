@@ -4,7 +4,7 @@ session_start(); // Start session
 // Ensure staffID exists in the session
 if (!isset($_SESSION['userID'])) {
     // Redirect to login page if staffID is not set
-    header("Location: ../login/login.php?error=Please login to access the dashboard");
+    header("Location: ../login/login.php?error=Access denied");
     exit();
 }
 

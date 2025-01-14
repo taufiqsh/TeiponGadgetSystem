@@ -27,6 +27,8 @@
             echo "No user found with that username.";
           } elseif ($error_message == 'account_disabled') {
             echo "Your account has been disabled.";
+          } elseif ($error_message == 'Access denied') {
+            echo "Access denied. Please log in to continue.";
           } else {
             echo "An error occurred. Please try again.";
           }
