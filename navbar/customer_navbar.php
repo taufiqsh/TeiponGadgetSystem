@@ -81,7 +81,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.p
           <h5 class="text-end mt-3">Total: RM <span id="cartTotal">0.00</span></h5>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <a href="../cart/cart.php" class="btn btn-light">View Cart</a>
           <a href="../checkout/checkout.php" class="btn btn-primary">Checkout</a>
         </div>
       </div>

@@ -2,73 +2,94 @@
 session_start();
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
 
-// Check if cart is empty or customer is not logged in
-if (!isset($_SESSION['cart']) || empty($_SESSION['cart']) || !isset($_SESSION['userID'])) {
+if (!isset($_SESSION['userID'])) {
     header("Location: ../cart/cart.php");
     exit();
 }
 
-$cart = $_SESSION['cart'];
-$totalPrice = 0;
-foreach ($cart as $item) {
-    $totalPrice += $item['price'] * $item['quantity'];
-}
-
 $customerID = $_SESSION['userID'];
+$conn->begin_transaction();
 
-// Retrieve customer address details from the customer table
-$customerSql = "SELECT customerAddress, customerCity, customerPostalCode, customerState 
-                FROM customer 
-                WHERE customerID = ?";
-$customerStmt = $conn->prepare($customerSql);
-$customerStmt->bind_param("i", $customerID);
-$customerStmt->execute();
-$customerResult = $customerStmt->get_result();
+try {
+    // Fetch cart items from the database
+    $cartSql = "
+        SELECT c.productID, c.quantity, p.productPrice AS price, p.productName, c.variantID
+        FROM cart c
+        JOIN product p ON c.productID = p.productID
+        WHERE c.customerID = ?";
+    $cartStmt = $conn->prepare($cartSql);
+    $cartStmt->bind_param("i", $customerID);
+    $cartStmt->execute();
+    $cartResult = $cartStmt->get_result();
 
-if ($customerResult->num_rows > 0) {
+    $cart = [];
+    $totalPrice = 0;
+
+    while ($item = $cartResult->fetch_assoc()) {
+        $cart[] = $item;
+        $totalPrice += $item['price'] * $item['quantity'];
+    }
+
+    if (empty($cart)) {
+        throw new Exception("Cart is empty.");
+    }
+
+    // Fetch customer address details
+    $customerSql = "SELECT customerAddress, customerCity, customerPostalCode, customerState 
+                    FROM customer 
+                    WHERE customerID = ?";
+    $customerStmt = $conn->prepare($customerSql);
+    $customerStmt->bind_param("i", $customerID);
+    $customerStmt->execute();
+    $customerResult = $customerStmt->get_result();
+
+    if ($customerResult->num_rows === 0) {
+        throw new Exception("Customer address not found.");
+    }
+
     $customer = $customerResult->fetch_assoc();
-    $customerAddress = $customer['customerAddress'];
-    $customerCity = $customer['customerCity'];
-    $customerPostalCode = $customer['customerPostalCode'];
-    $customerState = $customer['customerState'];
-} else {
-    echo "Customer address not found.";
+    $orderDetails = "Shipping Address: {$customer['customerAddress']}, {$customer['customerCity']}, {$customer['customerState']}, {$customer['customerPostalCode']}";
+
+    // Insert the order
+    $orderDate = date("Y-m-d");
+    $orderStatus = 'Pending Payment';
+
+    $orderSql = "INSERT INTO orders (orderDetails, orderDate, totalAmount, orderStatus, customerID) 
+                 VALUES (?, ?, ?, ?, ?)";
+    $orderStmt = $conn->prepare($orderSql);
+    $orderStmt->bind_param("sssss", $orderDetails, $orderDate, $totalPrice, $orderStatus, $customerID);
+    $orderStmt->execute();
+    $orderID = $orderStmt->insert_id;
+
+    // Insert order products
+    $checkedOutItems = []; // Track items added to the order
+
+    foreach ($cart as $item) {
+        $productID = $item['productID'];
+        $variantID = isset($item['variantID']) ? $item['variantID'] : null;
+        $quantity = $item['quantity'];
+        $price = $item['price'];
+        $totalItemPrice = $price * $quantity;
+
+        // Insert into orderProducts
+        $orderProductSql = "INSERT INTO orderProducts (orderID, productID, variantID, quantity, price, totalPrice, createdAt, updatedAt) 
+                            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+        $orderProductStmt = $conn->prepare($orderProductSql);
+        $orderProductStmt->bind_param("iiidid", $orderID, $productID, $variantID, $quantity, $price, $totalItemPrice);
+        $orderProductStmt->execute();
+
+        // Delete the item from the cart after processing
+        $deleteCartSql = "DELETE FROM cart WHERE productID = ? AND variantID = ? AND customerID = ?";
+        $deleteCartStmt = $conn->prepare($deleteCartSql);
+        $deleteCartStmt->bind_param("iii", $productID, $variantID, $customerID);
+        $deleteCartStmt->execute();
+    }
+
+    $conn->commit();
+    header("Location: ../payment/payment.php?orderID=" . $orderID);
+    exit();
+} catch (Exception $e) {
+    $conn->rollback();
+    echo "Error: " . $e->getMessage();
     exit();
 }
-
-// Get current date for the order
-$orderDate = date("Y-m-d");
-
-// Set order status (initial status could be 'Pending')
-$orderStatus = 'Pending Payment';
-
-// Create the order in the orders table
-$orderDetails = "Shipping Address: $customerAddress, $customerCity, $customerState, $customerPostalCode";
-$sql = "INSERT INTO orders (orderDetails, orderDate, totalAmount, orderStatus, customerID) 
-        VALUES (?, ?, ?, ?, ?)";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("sssss", $orderDetails, $orderDate, $totalPrice, $orderStatus, $customerID);
-$stmt->execute();
-$orderID = $stmt->insert_id;  // Get the ID of the newly created order
-
-// Insert products from the cart into orderProducts table
-foreach ($cart as $item) {
-    $productID = $item['id'];
-    $quantity = $item['quantity'];
-    $price = $item['price'];
-    $totalItemPrice = $price * $quantity;
-
-    $orderProductSql = "INSERT INTO orderProducts (orderID, productID, quantity, price, totalPrice) 
-                        VALUES (?, ?, ?, ?, ?)";
-    $stmt = $conn->prepare($orderProductSql);
-    $stmt->bind_param("iiidi", $orderID, $productID, $quantity, $price, $totalItemPrice);
-    $stmt->execute();
-}
-
-// Clear the cart after successful order creation
-unset($_SESSION['cart']);
-
-// Redirect to payment page
-header("Location: ../payment/payment.php?orderID=" . $orderID);
-exit();
-?>
