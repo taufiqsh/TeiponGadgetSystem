@@ -73,6 +73,7 @@ $tables = [
     "productvariant" => "CREATE TABLE IF NOT EXISTS `productvariant` (
         `variantID` INT NOT NULL AUTO_INCREMENT,
         `productID` INT NOT NULL,
+        `variantName`VARCHAR(255) NOT NULL,
         `productColor` VARCHAR(50) NOT NULL,
         `productStorage` INT DEFAULT NULL,
         `productRam` INT DEFAULT NULL,
@@ -88,23 +89,27 @@ $tables = [
         orderID INT NOT NULL,
         productID INT NOT NULL,
         quantity INT NOT NULL,
+        variantID INT NOT NULL,
         price DECIMAL(10, 2) NOT NULL,
         totalPrice DECIMAL(10, 2) NOT NULL,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (orderID) REFERENCES `orders`(orderID) ON DELETE CASCADE,
-        FOREIGN KEY (productID) REFERENCES product(productID) ON DELETE CASCADE
+        FOREIGN KEY (productID) REFERENCES product(productID) ON DELETE CASCADE,
+        FOREIGN KEY (variantID) REFERENCES productvariant(variantID) ON DELETE CASCADE
     )",
     "cart" => "CREATE TABLE IF NOT EXISTS CART (
         cartID INT AUTO_INCREMENT PRIMARY KEY,
         productID INT NOT NULL,
         customerID INT NOT NULL,
+        variantID INT NOT NULL,
         quantity INT NOT NULL,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (productID) REFERENCES product(productID) ON DELETE CASCADE,
-        FOREIGN KEY (customerID) REFERENCES customer(customerID) ON DELETE CASCADE
-    )"
+        FOREIGN KEY (customerID) REFERENCES customer(customerID) ON DELETE CASCADE,
+        FOREIGN KEY (variantID) REFERENCES productvariant(variantID) ON DELETE CASCADE
+        )"
 ];
 
 

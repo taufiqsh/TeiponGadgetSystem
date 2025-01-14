@@ -12,10 +12,9 @@ function checkLogin()
     return $_SESSION['userID'];
 }
 
-// Function to cancel an order
 function cancelOrder($conn, $orderID, $customerID)
 {
-    // Check if the order belongs to the logged-in customer and is in 'To Pay' status
+    // Check if the order belongs to the logged-in customer and is in 'Pending Payment' status
     $sql = "SELECT orderStatus FROM orders WHERE orderID = ? AND customerID = ? AND orderStatus = 'Pending Payment'";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ii", $orderID, $customerID);
@@ -29,10 +28,17 @@ function cancelOrder($conn, $orderID, $customerID)
         $updateStmt->bind_param("i", $orderID);
         $updateStmt->execute();
 
+        // If the order status is successfully updated, delete the order products
+        $deleteOrderProductsSql = "DELETE FROM orderProducts WHERE orderID = ?";
+        $deleteOrderProductsStmt = $conn->prepare($deleteOrderProductsSql);
+        $deleteOrderProductsStmt->bind_param("i", $orderID);
+        $deleteOrderProductsStmt->execute();
+
         return $updateStmt->affected_rows > 0;
     }
     return false;
 }
+
 
 // Function to fetch orders by status
 function getOrdersByStatus($conn, $customerID, $status)
@@ -82,19 +88,25 @@ function markOrderCompleted($conn, $orderID, $customerID)
 
 function getOrderProducts($conn, $orderID)
 {
-    $sql = "SELECT p.productImage, p.productName, op.quantity, op.price
-            FROM orderproducts op
-            JOIN product p ON op.productID = p.productID
+    $sql = "SELECT op.*, p.productName, p.productImage, v.variantName
+            FROM orderProducts op
+            LEFT JOIN product p ON op.productID = p.productID
+            LEFT JOIN productVariant v ON op.variantID = v.variantID
             WHERE op.orderID = ?";
+
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $orderID);
     $stmt->execute();
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $result = $stmt->get_result();
+
+    $orderProducts = [];
+    while ($row = $result->fetch_assoc()) {
+        $orderProducts[] = $row;
+    }
+
+    return $orderProducts;
 }
 
-
-
-// Process the mark order completed POST request
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['completeOrder']) && isset($_POST['orderID'])) {
     $customerID = checkLogin();
     $orderID = $_POST['orderID'];
@@ -126,7 +138,6 @@ $orderData = getAllOrderData($conn, $customerID);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Payment</title>
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
-    <link href="../assets/css/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         .card {
             border: 1px solid #ddd;
@@ -213,7 +224,7 @@ $orderData = getAllOrderData($conn, $customerID);
                     <?php if (count($orders) > 0): ?>
                         <div class="card mb-4">
                             <div class="card-header">
-                                <h5><?= $status ?> Orders</h5>
+                                <h5><?= htmlspecialchars($status); ?> Orders</h5>
                             </div>
                             <div class="card-body">
                                 <table class="table table-bordered table-striped mt-3">
@@ -223,7 +234,7 @@ $orderData = getAllOrderData($conn, $customerID);
                                             <th>Order Date</th>
                                             <th>Total Amount</th>
                                             <th>Order Status</th>
-                                            <?php if ($status === 'Pending Payment' || $status === 'Order Shipped'): ?>
+                                            <?php if (in_array($status, ['Pending Payment', 'Order Shipped'])): ?>
                                                 <th>Action</th>
                                             <?php endif; ?>
                                         </tr>
@@ -235,13 +246,14 @@ $orderData = getAllOrderData($conn, $customerID);
                                                 <td><?= htmlspecialchars($row['orderDate']); ?></td>
                                                 <td>RM <?= number_format($row['totalAmount'], 2); ?></td>
                                                 <td><?= htmlspecialchars($row['orderStatus']); ?></td>
-                                                <?php if ($status === 'Pending Payment' || $status === 'Order Shipped'): ?>
+                                                <?php if (in_array($status, ['Pending Payment', 'Order Shipped'])): ?>
                                                     <td>
                                                         <div class="action-btns">
                                                             <?php if ($status === 'Pending Payment'): ?>
                                                                 <a href="payment.php?orderID=<?= $row['orderID']; ?>"
                                                                     class="btn btn-primary btn-sm">Make Payment</a>
-                                                                <button class="btn btn-danger btn-sm" onclick="cancelOrder(<?= $row['orderID']; ?>)">Cancel Order</button>
+                                                                <button class="btn btn-danger btn-sm"
+                                                                    onclick="cancelOrder(<?= $row['orderID']; ?>)">Cancel Order</button>
                                                             <?php elseif ($status === 'Order Shipped'): ?>
                                                                 <button class="btn btn-success btn-sm"
                                                                     data-order-id="<?= $row['orderID']; ?>">Mark as Completed</button>
@@ -251,19 +263,19 @@ $orderData = getAllOrderData($conn, $customerID);
                                                 <?php endif; ?>
                                             </tr>
 
-                                            <!-- Display the products below the Order ID -->
+                                            <!-- Product Details -->
                                             <tr>
-                                                <td colspan="<?= $status === 'Pending Payment' || $status === 'Order Shipped' ? 6 : 5; ?>">
+                                                <td colspan="<?= in_array($status, ['Pending Payment', 'Order Shipped']) ? 5 : 4; ?>">
                                                     <?php
                                                     $orderProducts = getOrderProducts($conn, $row['orderID']);
-                                                    if (count($orderProducts) > 0):
-                                                    ?>
+                                                    if (!empty($orderProducts)): ?>
                                                         <div class="table-responsive">
                                                             <table class="table table-striped">
                                                                 <thead>
                                                                     <tr>
                                                                         <th>Product Image</th>
                                                                         <th>Product Name</th>
+                                                                        <th>Variant Name</th> <!-- Added Variant Name Column -->
                                                                         <th>Quantity</th>
                                                                         <th>Price</th>
                                                                         <th>Total</th>
@@ -279,6 +291,7 @@ $orderData = getAllOrderData($conn, $customerID);
                                                                                     style="max-width: 100px; height: auto;">
                                                                             </td>
                                                                             <td><?= htmlspecialchars($item['productName']); ?></td>
+                                                                            <td><?= htmlspecialchars($item['variantName']); ?></td> <!-- Displaying the Variant Name -->
                                                                             <td><?= htmlspecialchars($item['quantity']); ?></td>
                                                                             <td>RM <?= number_format($item['price'], 2); ?></td>
                                                                             <td>RM <?= number_format($item['quantity'] * $item['price'], 2); ?></td>
@@ -292,18 +305,19 @@ $orderData = getAllOrderData($conn, $customerID);
                                                     <?php endif; ?>
                                                 </td>
                                             </tr>
+
                                         <?php endforeach; ?>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
-
                     <?php else: ?>
-                        <p class="text-center mt-3">No orders found in <?= $status; ?>.</p>
+                        <p class="text-center mt-3">No orders found in <?= htmlspecialchars($status); ?>.</p>
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
         </div>
+
     </div>
 
     <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
@@ -328,106 +342,6 @@ $orderData = getAllOrderData($conn, $customerID);
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        function addToCart(productID, productName, productPrice, productImage) {
-            $.ajax({
-                url: '../cart/add_to_cart.php',
-                method: 'POST',
-                data: {
-                    productID: productID,
-                    productName: productName,
-                    productPrice: productPrice,
-                    productImage: productImage
-                },
-                success: function(response) {
-                    const responseData = JSON.parse(response);
-                    const cartCountElement = document.getElementById('cartCount');
-                    cartCountElement.innerText = responseData.cartCount; // Update cart count
-                    updateCartModal(responseData.cart); // Update the modal with new cart data
-                }
-            });
-        }
-
-        // Update the cart modal with current cart data
-        function updateCartModal(cart) {
-            var cartItemsHTML = '';
-            var total = 0;
-
-            // Loop through each cart item and display it
-            cart.forEach(function(item) {
-                total += item.price * item.quantity; // Calculate total price
-                cartItemsHTML += `
-                <div class="cart-item card mb-3 shadow-sm">
-                    <div class="card-body d-flex justify-content-between align-items-center gap-3">
-                        <!-- Image and Details -->
-                        <div class="d-flex align-items-center gap-3">
-                            <img src="../uploads/${item.image}" alt="${item.name}" class="rounded img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
-                            <div>
-                                <h6 class="mb-1">${item.name} <small class="text-muted">(x${item.quantity})</small></h6>
-                                <p class="mb-0 text-primary fw-bold">RM ${(Number(item.price)).toLocaleString(                                // Update the cart modal with current cart data
-                    function updateCartModal(cart) {
-                        var cartItemsHTML = '';
-                        var total = 0;
-
-                        // Loop through each cart item and display it
-                        cart.forEach(function(item) {
-                            total += item.price * item.quantity; // Calculate total price
-                            cartItemsHTML += `
-                                        <div class="cart-item card mb-3 shadow-sm">
-                                            <div class="card-body d-flex justify-content-between align-items-center gap-3">
-                                                <!-- Image and Details -->
-                                                <div class="d-flex align-items-center gap-3">
-                                                    <img src="../uploads/${item.image}" alt="${item.name}" class="rounded img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
-                                                    <div>
-                                                        <h6 class="mb-1">${item.name} <small class="text-muted">(x${item.quantity})</small></h6>
-                                                        <p class="mb-0 text-primary fw-bold">RM ${(Number(item.price)).toLocaleString()}</p>
-                                                    </div>
-                                                </div>
-                                                <!-- Remove Button -->
-                                                <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.id})">
-                                                    <i class="bi bi-trash3"></i> Remove
-                                                </button>
-                                            </div>
-                                        </div>
-                                        `;
-                        });
-
-                        // Update cart content and total
-                        $('#cartItems').html(cartItemsHTML);
-                        $('#cartTotal').text(total.toLocaleString()); // Update total price
-                    })}</p>
-                            </div>
-                        </div>
-                        <!-- Remove Button -->
-                        <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.id})">
-                            <i class="bi bi-trash3"></i> Remove
-                        </button>
-                    </div>
-                </div>
-                `;
-            });
-
-            // Update cart content and total
-            $('#cartItems').html(cartItemsHTML);
-            $('#cartTotal').text(total.toLocaleString()); // Update total price
-        }
-
-        // Remove product from cart
-        function removeFromCart(productId) {
-            $.ajax({
-                url: '../cart/remove_from_cart.php',
-                method: 'POST',
-                data: {
-                    id: productId
-                },
-                success: function(response) {
-                    const responseData = JSON.parse(response);
-                    updateCartModal(responseData.cart); // Update the modal with new cart data
-                    const cartCountElement = document.getElementById('cartCount');
-                    cartCountElement.innerText = responseData.cartCount; // Update cart count
-                }
-            });
-        }
-
         function cancelOrder(orderID) {
             // Open the modal
             $('#cancelOrderModal').modal('show');
@@ -470,8 +384,6 @@ $orderData = getAllOrderData($conn, $customerID);
                 });
             });
         }
-
-
         // Function to display alerts
         function showAlert(message, type) {
             const alertContainer = document.getElementById('alertContainer');
