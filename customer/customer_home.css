@@ -140,3 +140,45 @@
 .button {
     width: 100%;
 }
+
+#open-chatbox {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border: none;
+    border-radius: 50%; 
+    background-image: url('../chatbox/img/teiponBot-icon.png'); 
+    background-size: cover; 
+    background-color: #4DA1A9; 
+    color: #4DA1A9; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.6);
+    transition: all 0.3s ease;
+  }
+
+  #open-chatbox:hover {
+    background-color: #13545a; 
+  }
+
+  #chatbox-section {
+    position: fixed; 
+    top: 29%; 
+    left: 75%; 
+    width: 400px; 
+    height: 600px; 
+    background-color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0.3, 0.3);
+    transition: box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  
