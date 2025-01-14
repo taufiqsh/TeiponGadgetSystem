@@ -447,7 +447,7 @@ $result = $stmt->get_result();
                 modal.show();
             });
         }
-        
+
         // Remove product from cart
         function removeFromCart(productID, variantID) {
             $.ajax({
@@ -531,13 +531,11 @@ $result = $stmt->get_result();
                     item.style.display = ''; // Show the product item
                 } else {
                     item.style.display = 'none'; // Hide the product item
-                error: function(xhr, status, error) {
-                    console.error("Get cart error:", xhr.responseText);
                 }
             });
         });
     </script>
-    
+
     <!-- chatbox script-->
     <script>
         function toggleChatbox() {
@@ -550,11 +548,11 @@ $result = $stmt->get_result();
             }
         }
 
-        function minimizeChat(){
+        function minimizeChat() {
             const chatboxSection = document.getElementById('chatbox-section');
             chatboxSection.style.display = 'none';
         }
-        
+
         function sendWelcomeMessage() {
             fetch('../chatbox/chatbot.php', {
                     method: 'POST',
@@ -638,7 +636,11 @@ $result = $stmt->get_result();
             }, 1500); // delay for loading
         }
 
-        document.getElementById('userInput').addEventListener('keydown', function(event) {if (event.key === 'Enter') {sendMessage();}});
+        document.getElementById('userInput').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
     </script>
     <!-- end of chatbox script-->
 
