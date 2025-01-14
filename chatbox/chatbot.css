@@ -1,4 +1,4 @@
-body {
+/* body {
     font-family: 'Poppins', sans-serif;
     background-color: #f4f4f9;
     margin: 0;
@@ -6,7 +6,7 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-}
+} */
 
 #chatbox {
     width: 400px;
@@ -18,7 +18,8 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-}
+} 
+
 
 #chat-header {
     background-color: #4DA1A9;
@@ -57,7 +58,7 @@ body {
     padding: 15px;
     background-image: url('img/chillGuy.png');
     background-size: cover;
-    background-position: center;
+    background-position: top center; /* Fix for background image movement */
     /*background-color: #F6F4F0;*/
     scrollbar-width: thin;
     scrollbar-color: #dee2e6 #f4f4f9;
@@ -123,6 +124,7 @@ body {
     display: flex;
     padding: 6px;
     border-top: 2px solid #b1b1b1;
+    order: 2; /* Move the input area to the bottom */
 }
 
 #userInput {

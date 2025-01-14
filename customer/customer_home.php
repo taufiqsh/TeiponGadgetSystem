@@ -40,7 +40,7 @@ $result = $stmt->get_result();
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customer Home</title>
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
@@ -119,7 +119,7 @@ $result = $stmt->get_result();
 
     <script>
         // Filter products using JavaScript
-        document.getElementById('filterButton').addEventListener('click', function () {
+        document.getElementById('filterButton').addEventListener('click', function() {
             const searchValue = document.getElementById('searchInput').value.toLowerCase();
             const minPrice = parseFloat(document.getElementById('minPriceInput').value) || 0;
             const maxPrice = parseFloat(document.getElementById('maxPriceInput').value) || Infinity;
@@ -165,8 +165,33 @@ $result = $stmt->get_result();
         </div>
     </div>
 
+    <!-- chatbox -->
+    <section id="chatbox-section" style="display: none;">
+        <link rel="stylesheet" href="../chatbox/chatbot.css">
+        <div id="chatbox-container">
+            <div id="chatbox">
+                <div id="chat-header">
+                    <h3>
+                        <img src="../chatbox/img/teiponBot-icon.png" alt="Logo"> KOJEK
+                    </h3>
+                    <button id="close-btn" onclick="minimizeChat()">×</button>
+                </div>
+                <div id="messages"></div>
+                <div id="input-area">
+                    <input type="text" id="userInput" class="form-control" placeholder="Type your message here...">
+                    <button id="send-btn" onclick="sendMessage()">
+                        <i class="bi bi-rocket-takeoff"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+    <button id="open-chatbox" onclick="toggleChatbox()"> </button>
+    <!-- end of chatbox -->
+
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Add product to cart
         function addToCart(productID, productName, productPrice, productImage) {
@@ -186,7 +211,7 @@ $result = $stmt->get_result();
                     productPrice: productPrice,
                     productImage: productImage
                 },
-                success: function (response) {
+                success: function(response) {
                     try {
                         const responseData = JSON.parse(response);
                         const cartCountElement = document.getElementById('cartCount');
@@ -198,7 +223,7 @@ $result = $stmt->get_result();
                         console.error("Error parsing response:", error);
                     }
                 },
-                error: function (xhr, status, error) {
+                error: function(xhr, status, error) {
                     console.error("Add to cart error:", xhr.responseText);
                 }
             });
@@ -240,7 +265,7 @@ $result = $stmt->get_result();
                 data: {
                     productID: productId
                 },
-                success: function (response) {
+                success: function(response) {
                     try {
                         const responseData = JSON.parse(response);
                         updateCartModal(responseData.cart);
@@ -252,18 +277,18 @@ $result = $stmt->get_result();
                         console.error("Error parsing response:", error);
                     }
                 },
-                error: function (xhr, status, error) {
+                error: function(xhr, status, error) {
                     console.error("Remove from cart error:", xhr.responseText);
                 }
             });
         }
 
         // Initialize the cart modal when the page loads
-        $(document).ready(function () {
+        $(document).ready(function() {
             $.ajax({
                 url: '../cart/get_cart.php',
                 method: 'GET',
-                success: function (response) {
+                success: function(response) {
                     try {
                         const responseData = JSON.parse(response);
                         if (responseData && responseData.cart) {
@@ -276,12 +301,116 @@ $result = $stmt->get_result();
                         console.error("Error parsing the cart data:", error);
                     }
                 },
-                error: function (xhr, status, error) {
+                error: function(xhr, status, error) {
                     console.error("Get cart error:", xhr.responseText);
                 }
             });
         });
     </script>
+    
+    <!-- chatbox script-->
+    <script>
+        function toggleChatbox() {
+            const chatboxSection = document.getElementById('chatbox-section');
+            if (chatboxSection.style.display === 'none') {
+                chatboxSection.style.display = 'block';
+                sendWelcomeMessage();
+            } else {
+                chatboxSection.style.display = 'none';
+            }
+        }
+
+        function minimizeChat(){
+            const chatboxSection = document.getElementById('chatbox-section');
+            chatboxSection.style.display = 'none';
+        }
+        
+        function sendWelcomeMessage() {
+            fetch('../chatbox/chatbot.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: "hello"
+                    }), // Custom message for welcome intent
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const messages = document.getElementById('messages');
+                    messages.innerHTML += `
+                        <div class="message bot">
+                            <div class="message-content"><strong>Kojek:</strong> ${data.reply}</div>
+                        </div>
+                    `;
+                    messages.scrollTop = messages.scrollHeight;
+                })
+                .catch(() => {
+                    const messages = document.getElementById('messages');
+                    messages.innerHTML += `
+                        <div class="message bot">
+                            <div class="message-content"><strong>Kojek:</strong> Sorry, there was an error initializing the chat.</div>
+                        </div>
+                    `;
+                });
+        }
+
+        function sendMessage() {
+            const userInput = document.getElementById('userInput').value.trim();
+            if (!userInput) return;
+
+            document.getElementById('userInput').value = '';
+
+            const messages = document.getElementById('messages');
+            messages.innerHTML += `
+                <div class="message user">
+                    <div class="message-content"><strong>You:</strong> ${userInput}</div>
+                </div>
+            `;
+
+            // Add loading bubble
+            const loadingBubble = document.createElement('div');
+            loadingBubble.className = 'message bot';
+            loadingBubble.innerHTML = `
+                <div class="loading-bubble">. . .</div>
+            `;
+            messages.appendChild(loadingBubble);
+            messages.scrollTop = messages.scrollHeight;
+
+            setTimeout(() => {
+                // Replace loading bubble with bot response
+                loadingBubble.remove();
+                fetch('../chatbox/chatbot.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: userInput
+                        }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        messages.innerHTML += `
+                            <div class="message bot">
+                                <div class="message-content"><strong>Kojek:</strong> ${data.reply}</div>
+                            </div>
+                        `;
+                        messages.scrollTop = messages.scrollHeight;
+                    })
+                    .catch(() => {
+                        messages.innerHTML += `
+                            <div class="message bot">
+                                <div class="message-content"><strong>Kojek:</strong> Sorry, there was an error processing your message.</div>
+                            </div>
+                        `;
+                    });
+            }, 1500); // delay for loading
+        }
+
+        document.getElementById('userInput').addEventListener('keydown', function(event) {if (event.key === 'Enter') {sendMessage();}});
+    </script>
+    <!-- end of chatbox script-->
 
 </body>
 
