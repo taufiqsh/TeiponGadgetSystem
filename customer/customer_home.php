@@ -95,20 +95,21 @@ $result = $stmt->get_result();
                     $productImage = htmlspecialchars($row['productImage']);
 
                     echo '
-                    <div class="col-md-3 col-sm-4 product-item" 
-                        data-name="' . strtolower($productName) . '" 
-                        data-price="' . $productPrice . '" 
-                        data-description="' . strtolower($productDescription) . '">
-                        <div class="product-card">
-                            <img src="../uploads/' . $productImage . '" alt="' . $productName . '" class="img-fluid product-image mb-3">
-                            <h5 class="product-name">' . $productName . '</h5>
-                            <p class="product-description">' . $productDescription . '</p>
-                            <p class="product-price">RM ' . number_format($productPrice, 2) . '</p>
-                            <button class="btn btn-outline-primary" onclick="addToCart(' . $row['productID'] . ', \'' . addslashes($productName) . '\', ' . $productPrice . ', \'' . addslashes($productImage) . '\')">
-                                Add to Cart
+                    <div class="col-md-3 col-sm-4 product-item">
+                        <div class="text-center">
+                            <img src="../uploads/' . htmlspecialchars($productImage) . '" 
+                                 alt="' . htmlspecialchars($productName) . '" 
+                                 class="img-fluid product-image mb-3">
+                            <h5>' . htmlspecialchars($productName) . '</h5>
+                            <p>' . htmlspecialchars($productDescription) . '</p>
+                            <p class="fw-bold">Price: RM ' . number_format($productPrice, 2) . '</p>
+                            <button class="btn btn-primary" 
+                                    onclick="showProductDetails(' . htmlspecialchars($row['productID']) . ')">
+                                Buy
                             </button>
                         </div>
-                    </div>';
+                    </div>
+                    ';
                 }
             } else {
                 echo '<p class="text-center">No products available.</p>';
@@ -117,9 +118,354 @@ $result = $stmt->get_result();
         </div>
     </div>
 
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        function showProductDetails(productID) {
+            $.ajax({
+                url: '../product/get_product_details.php',
+                method: 'GET',
+                data: {
+                    productID: productID
+                },
+                success: function(response) {
+                    try {
+                        const product = JSON.parse(response);
+
+                        console.log("Product details:", product);
+                        console.log("Product name", product.productName); // Debugging response
+
+                        if (product) {
+                            // Use fallback values for price and variants
+                            const productPrice = Number(product.productPrice) || 0;
+                            const variantsHTML = product.variants ?
+                                product.variants.map(variant => {
+                                    const variantPrice = Number(variant.productPrice) || 0;
+                                    return `<option value="${variant.variantID}">${variant.variantName} (+RM ${variantPrice.toFixed(2)})</option>`;
+                                }).join('') :
+                                '<option disabled>No variants available</option>';
+
+                            console.log("Product variants", variantsHTML);
+
+                            const modalHTML = `
+                        <div class="modal fade" id="productDetailsModal_${product.productID}" tabindex="-1" aria-labelledby="productName_${product.productID}">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="productName_${product.productID}">
+                                            ${product.productName || "Unknown Product"}
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <img src="../uploads/${product.productImage || "default.jpg"}" 
+                                            id="productImage_${product.productID}" class="img-fluid mb-3" 
+                                            alt="${product.productName || "Product"}">
+                                        <p id="productDescription_${product.productID}">${product.productDescription || "No description available"}</p>
+                                        <p class="fw-bold" id="productPrice_${product.productID}">
+                                            Price: RM ${productPrice.toFixed(2)}
+                                        </p>
+
+                                        <!-- Variant Selection -->
+                                        <div class="mb-3">
+                                            <label for="variantSelect_${product.productID}" class="form-label">Choose a Variant:</label>
+                                            <select id="variantSelect_${product.productID}" class="form-select">
+                                                ${variantsHTML}
+                                            </select>
+                                        </div>
+
+                                        <!-- Quantity Selection -->
+                                        <input type="number" id="quantity_${product.productID}" class="form-control mb-2" value="1" min="1">
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button class="btn btn-primary" id="addToCartButton_${product.productID}" onclick="addToCart(${product.productID}, 
+                                                document.getElementById('variantSelect_${product.productID}').value, 
+                                                document.getElementById('quantity_${product.productID}').value)">
+                                            Add to Cart
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                            // Insert the modal HTML directly into the body or a predefined container
+                            document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+                            // Manage inert and focus
+                            const modalElement = document.getElementById(`productDetailsModal_${product.productID}`);
+                            const modal = new bootstrap.Modal(modalElement, {
+                                backdrop: 'static', // Ensures the backdrop remains and blocks interactions
+                                keyboard: false // Optionally disable closing modal with keyboard (Esc)
+                            });
+
+                            // When the modal is shown, prevent interaction with the background content and set focus on the first button inside the modal
+                            modalElement.addEventListener('shown.bs.modal', () => {
+                                // Remove aria-hidden from the modal and prevent interaction with the background content
+                                modalElement.removeAttribute('aria-hidden');
+
+                                // Apply inert only to the background content, not the modal itself
+                                const backgroundContent = document.querySelector('main, .container, .content'); // Adjust based on your structure
+                                if (backgroundContent) backgroundContent.setAttribute('inert', 'true');
+
+                                // Focus on the first focusable element inside the modal (usually a button)
+                                const firstFocusableElement = modalElement.querySelector('button, input, select, textarea');
+                                if (firstFocusableElement) firstFocusableElement.focus();
+                            });
+
+                            // When the modal is hidden, remove inert and ensure everything is focusable again
+                            modalElement.addEventListener('hidden.bs.modal', () => {
+                                modalElement.setAttribute('aria-hidden', 'true');
+                                const backgroundContent = document.querySelector('main, .container, .content');
+                                if (backgroundContent) backgroundContent.removeAttribute('inert');
+                            });
+
+                            // Show the modal
+                            modal.show();
+                        }
+                    } catch (error) {
+                        console.error("Error parsing product details:", error);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching product details:", error);
+                }
+            });
+        }
+
+        // Add product to cart
+        function addToCart(productID, variantID, quantity) {
+            const customerID = <?php echo $_SESSION['userID']; ?>; // Fetch customerID from session (PHP side)
+            const createdAt = new Date().toISOString();
+            const updatedAt = createdAt;
+
+            // Get product details dynamically
+            const productNameElement = document.getElementById(`productName_${productID}`);
+            const productPriceElement = document.getElementById(`productPrice_${productID}`);
+            const productImageElement = document.getElementById(`productImage_${productID}`);
+            let productImage = '';
+
+            if (productImageElement) {
+                const imageUrl = productImageElement.src;
+                const url = new URL(imageUrl);
+                productImage = url.pathname.replace(/^.*?\/TeiponGadgetSystem\//, '/'); // Adjust path if necessary
+            }
+
+            // Ensure elements exist before using them
+            if (!productNameElement || !productPriceElement || !productImageElement) {
+                console.error("Error: Missing product details in the DOM.");
+                return; // Exit the function if any element is missing
+            }
+
+            const productName = productNameElement.innerText;
+            const productPrice = Number(productPriceElement.innerText.replace('Price: RM ', '').trim());
+
+            console.log("Adding to cart:", {
+                productID,
+                productName,
+                productPrice,
+                productImage,
+                variantID: parseInt(variantID, 10),
+                quantity: parseInt(quantity, 10),
+                createdAt,
+                updatedAt
+            });
+
+            $.ajax({
+                url: '../cart/add_to_cart.php',
+                method: 'POST',
+                data: {
+                    productID: productID,
+                    productName: productName,
+                    productPrice: productPrice,
+                    productImage: productImage,
+                    variantID: parseInt(variantID, 10),
+                    quantity: parseInt(quantity, 10),
+                    createdAt: createdAt,
+                    updatedAt: updatedAt
+                },
+                success: function(response) {
+                    console.log("Server response:", response); // Log raw response
+
+                    try {
+                        const responseData = JSON.parse(response);
+                        console.log("Product ID", responseData.productID);
+                        console.log("Cart : " + responseData.cart);
+                        console.log("Parsed responseData:", responseData);
+                        console.log("Cart count:", responseData.cartCount);
+
+                        let successMessagesElement = document.getElementById('successMessages');
+                        if (!successMessagesElement) {
+                            successMessagesElement = document.createElement('div');
+                            successMessagesElement.id = 'successMessages';
+                            document.body.appendChild(successMessagesElement);
+                            console.log("successMessages div created and appended");
+                        }
+
+                        // Show success message if the server response is correct
+                        if (responseData.cartCount !== undefined) {
+                            const successMessage = document.createElement('div');
+                            successMessage.className = 'alert alert-success alert-dismissible fade show';
+                            successMessage.role = 'alert';
+                            successMessage.innerHTML = `Product added to cart successfully! <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+                            successMessagesElement.appendChild(successMessage);
+
+                            setTimeout(() => {
+                                successMessage.classList.remove('show');
+                                successMessage.classList.add('fade');
+                                setTimeout(() => {
+                                    successMessage.remove();
+                                }, 500);
+                            }, 3000);
+
+                            // Update cart count
+                            const cartCountElement = document.getElementById('cartCount');
+                            if (responseData.cartCount !== undefined) {
+                                cartCountElement.innerText = responseData.cartCount;
+                            }
+
+                            // Update cart modal (refresh cart after adding item)
+                            if (responseData.cart) {
+                                console.log("Cart updated with new data:", responseData.cart);
+                                updateCartModal(responseData.cart);
+                            }
+
+                            // Close the modal after the item has been added
+                            const productModal = document.getElementById(`productDetailsModal_${productID}`);
+                            const modal = bootstrap.Modal.getInstance(productModal);
+                            modal.hide();
+                        } else {
+                            console.error("Error: Cart count not returned in the response.");
+                        }
+                    } catch (error) {
+                        console.error("Error parsing response:", error);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Add to cart error:", xhr.responseText);
+                }
+            });
+        }
+        // Update the cart modal with current cart data
+        function updateCartModal(cart) {
+            console.log("Updating modal with cart:", cart); // Debug log to see the cart data
+            let cartItemsHTML = '';
+            let total = 0;
+
+            // Check if cart is an array and has items
+            if (Array.isArray(cart) && cart.length > 0) {
+                cart.forEach(item => {
+                    if (item.productName && item.quantity && item.productPrice && item.productImage) {
+                        const itemPrice = Number(item.productPrice) || 0;
+                        const itemQuantity = item.quantity || 1;
+                        const itemTotalPrice = itemPrice * itemQuantity;
+
+                        // Build the cart item HTML
+                        cartItemsHTML += `
+                    <div class="cart-item card mb-3 shadow-sm" data-product-id="${item.productID}" data-variant-id="${item.variantID}">
+                        <div class="card-body d-flex justify-content-between align-items-center gap-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="../uploads/${item.productImage}" alt="${item.productName}" class="rounded img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                                <div>
+                                    <h6 class="mb-1">${item.productName} 
+                                        <small class="text-muted">(x${itemQuantity})</small>
+                                        ${item.variantName ? `<br><small class="text-muted">Variant: ${item.variantName}</small>` : ''}
+                                    </h6>
+                                    <p class="mb-0 text-primary fw-bold">RM ${(itemTotalPrice).toFixed(2)}</p>
+                                </div>
+                            </div>
+                            <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.productID}, ${item.variantID})">
+                                <i class="bi bi-trash3"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+
+                        total += itemTotalPrice;
+                    }
+                });
+            } else {
+                cartItemsHTML = '<p class="text-center">Your cart is empty.</p>';
+            }
+
+            // Update the cart items and total price displayed in the modal
+            $('#cartItems').html(cartItemsHTML);
+            $('#cartTotal').text(total.toFixed(2));
+
+            // Open modal when the cart icon is clicked
+            $('#cartIcon').click(function() {
+                const modal = new bootstrap.Modal(document.getElementById('cartModal'));
+                modal.show();
+            });
+        }
+        
+        // Remove product from cart
+        function removeFromCart(productID, variantID) {
+            console.log("Removing from cart with productID:", productID, "and variantID:", variantID); // Debug log to check values
+
+            $.ajax({
+                url: '../cart/remove_from_cart.php',
+                method: 'POST',
+                data: {
+                    productID: productID, // Make sure productID is included
+                    variantID: variantID // Include variantID as well
+                },
+                success: function(response) {
+                    try {
+                        const responseData = JSON.parse(response);
+                        console.log("Response from server:", response); // Debug log for server response
+
+                        if (responseData.error) {
+                            console.error("Error:", responseData.error);
+                            return;
+                        }
+
+                        // Update the modal with the new cart data
+                        updateCartModal(responseData.cart);
+
+                        // Update the cart count in the UI
+                        const cartCountElement = document.getElementById('cartCount');
+                        if (responseData.cartCount !== undefined) {
+                            cartCountElement.innerText = responseData.cartCount;
+                        }
+                    } catch (error) {
+                        console.error("Error parsing response:", error);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Remove from cart error:", xhr.responseText); // Debug log for error
+                }
+            });
+        }
+
+        // Initialize the cart modal when the page loads
+        $(document).ready(function() {
+            $.ajax({
+                url: '../cart/get_cart.php', // Endpoint to fetch the cart data
+                method: 'GET',
+                success: function(response) {
+                    try {
+                        const responseData = JSON.parse(response); // Parse the JSON response
+                        if (responseData && responseData.cart) {
+                            const cart = responseData.cart || []; // Get the cart array
+                            updateCartModal(cart); // Update the modal with the cart data
+
+                            // Update the cart count
+                            const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
+                            document.getElementById('cartCount').innerText = cartCount; // Update the cart count on the page
+                        }
+                    } catch (error) {
+                        console.error("Error parsing the cart data:", error); // Handle errors if parsing fails
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Get cart error:", xhr.responseText); // Handle errors from the server response
+                }
+            });
+        });
+
         // Filter products using JavaScript
-        document.getElementById('filterButton').addEventListener('click', function () {
+        document.getElementById('filterButton').addEventListener('click', function() {
             const searchValue = document.getElementById('searchInput').value.toLowerCase();
             const minPrice = parseFloat(document.getElementById('minPriceInput').value) || 0;
             const maxPrice = parseFloat(document.getElementById('maxPriceInput').value) || Infinity;
@@ -140,144 +486,6 @@ $result = $stmt->get_result();
                     item.style.display = ''; // Show the product item
                 } else {
                     item.style.display = 'none'; // Hide the product item
-                }
-            });
-        });
-    </script>
-
-    <!-- Cart Modal -->
-    <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="cartModalLabel">Your Cart</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="cartItems"></div>
-                    <h5 class="text-end mt-3">Total: RM <span id="cartTotal">0.00</span></h5>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <a href="../checkout/checkout.php" class="btn btn-primary">Checkout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="../assets/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        // Add product to cart
-        function addToCart(productID, productName, productPrice, productImage) {
-            console.log("Adding to cart:", {
-                productID,
-                productName,
-                productPrice,
-                productImage
-            });
-
-            $.ajax({
-                url: '../cart/add_to_cart.php',
-                method: 'POST',
-                data: {
-                    productID: productID,
-                    productName: productName,
-                    productPrice: productPrice,
-                    productImage: productImage
-                },
-                success: function (response) {
-                    try {
-                        const responseData = JSON.parse(response);
-                        const cartCountElement = document.getElementById('cartCount');
-                        if (responseData.cartCount !== undefined) {
-                            cartCountElement.innerText = responseData.cartCount;
-                        }
-                        updateCartModal(responseData.cart);
-                    } catch (error) {
-                        console.error("Error parsing response:", error);
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.error("Add to cart error:", xhr.responseText);
-                }
-            });
-        }
-
-        // Update the cart modal with current cart data
-        function updateCartModal(cart) {
-            let cartItemsHTML = '';
-            let total = 0;
-
-            cart.forEach(item => {
-                total += item.price * item.quantity;
-                cartItemsHTML += `
-        <div class="cart-item card mb-3 shadow-sm">
-            <div class="card-body d-flex justify-content-between align-items-center gap-3">
-                <div class="d-flex align-items-center gap-3">
-                    <img src="../uploads/${item.image}" alt="${item.name}" class="rounded img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
-                    <div>
-                        <h6 class="mb-1">${item.name} <small class="text-muted">(x${item.quantity})</small></h6>
-                        <p class="mb-0 text-primary fw-bold">RM ${(Number(item.price)).toFixed(2)}</p>
-                    </div>
-                </div>
-                <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.id})">
-                    <i class="bi bi-trash3"></i> Remove
-                </button>
-            </div>
-        </div>`;
-            });
-
-            $('#cartItems').html(cartItemsHTML);
-            $('#cartTotal').text(total.toFixed(2));
-        }
-
-        // Remove product from cart
-        function removeFromCart(productId) {
-            $.ajax({
-                url: '../cart/remove_from_cart.php',
-                method: 'POST',
-                data: {
-                    productID: productId
-                },
-                success: function (response) {
-                    try {
-                        const responseData = JSON.parse(response);
-                        updateCartModal(responseData.cart);
-                        const cartCountElement = document.getElementById('cartCount');
-                        if (responseData.cartCount !== undefined) {
-                            cartCountElement.innerText = responseData.cartCount;
-                        }
-                    } catch (error) {
-                        console.error("Error parsing response:", error);
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.error("Remove from cart error:", xhr.responseText);
-                }
-            });
-        }
-
-        // Initialize the cart modal when the page loads
-        $(document).ready(function () {
-            $.ajax({
-                url: '../cart/get_cart.php',
-                method: 'GET',
-                success: function (response) {
-                    try {
-                        const responseData = JSON.parse(response);
-                        if (responseData && responseData.cart) {
-                            const cart = responseData.cart || [];
-                            updateCartModal(cart);
-                            const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
-                            document.getElementById('cartCount').innerText = cartCount;
-                        }
-                    } catch (error) {
-                        console.error("Error parsing the cart data:", error);
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.error("Get cart error:", xhr.responseText);
                 }
             });
         });
