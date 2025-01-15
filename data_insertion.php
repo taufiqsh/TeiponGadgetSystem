@@ -214,7 +214,7 @@ if ($conn->query($sqlInsertProductVariant) === TRUE) {
     // Optionally redirect after a short delay
     echo '<script>
             setTimeout(function() {
-                window.location.href = "home.php";
+                window.location.href = "index.php";
             }, 2000); // Redirect after 2 seconds
           </script>';
 } else {

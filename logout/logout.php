@@ -7,6 +7,6 @@ session_unset();
 // Destroy the session itself
 session_destroy();
 
-header("Location: /TeiponGadgetSystem/home.php");
+header("Location: /TeiponGadgetSystem/index.php");
 exit();
 ?>

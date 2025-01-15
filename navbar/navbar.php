@@ -34,7 +34,7 @@ $productResult = $conn->query($productQuery);
   <nav class="navbar navbar-expand-lg navbar-light bg-dark" data-bs-theme="dark"> <!-- Removed border-bottom -->
     <div class="container justify-content-between">
       <!-- Left Logo -->
-      <a href="/TeiponGadgetSystem/home.php" class="navbar-brand d-flex align-items-center">
+      <a href="/TeiponGadgetSystem/index.php" class="navbar-brand d-flex align-items-center">
         <i class="bi bi-phone"></i>
         <h4 class="text-white m-0">Teipon Gadget System</h4>
       </a>

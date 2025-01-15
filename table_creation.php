@@ -143,7 +143,7 @@ $conn->close();
     <div class="container text-center">
         <h1 class="mt-5">Setup Complete!</h1>
         <p>The database and tables have been created successfully.</p>
-        <button onclick="location.href='home.php';" class="btn btn-primary mt-3">Go to Index</button>
+        <button onclick="location.href='index.php';" class="btn btn-primary mt-3">Go to Index</button>
         <button onclick="location.href='data_insertion.php';" class="btn btn-primary mt-3">Insert Data</button>
     </div>
 </body>
