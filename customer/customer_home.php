@@ -95,21 +95,24 @@ $result = $stmt->get_result();
                     $productImage = htmlspecialchars($row['productImage']);
 
                     echo '
-                    <div class="col-md-3 col-sm-4 product-item">
-                        <div class="text-center">
-                            <img src="../uploads/' . htmlspecialchars($productImage) . '" 
-                                 alt="' . htmlspecialchars($productName) . '" 
-                                 class="img-fluid product-image mb-3">
-                            <h5>' . htmlspecialchars($productName) . '</h5>
-                            <p>' . htmlspecialchars($productDescription) . '</p>
-                            <p class="fw-bold">Price: RM ' . number_format($productPrice, 2) . '</p>
-                            <button class="btn btn-primary" 
-                                    onclick="showProductDetails(' . htmlspecialchars($row['productID']) . ')">
-                                Buy
-                            </button>
-                        </div>
+                <div class="col-md-3 col-sm-4 product-item" 
+                     data-name="' . strtolower($productName) . '" 
+                     data-price="' . $productPrice . '" 
+                     data-description="' . strtolower($productDescription) . '">
+                    <div class="text-center">
+                        <img src="../uploads/' . htmlspecialchars($productImage) . '" 
+                             alt="' . htmlspecialchars($productName) . '" 
+                             class="img-fluid product-image mb-3">
+                        <h5>' . htmlspecialchars($productName) . '</h5>
+                        <p>' . htmlspecialchars($productDescription) . '</p>
+                        <p class="fw-bold">Price: RM ' . number_format($productPrice, 2) . '</p>
+                        <button class="btn btn-primary" 
+                                onclick="showProductDetails(' . htmlspecialchars($row['productID']) . ')">
+                            Buy
+                        </button>
                     </div>
-                    ';
+                </div>
+                ';
                 }
             } else {
                 echo '<p class="text-center">No products available.</p>';
@@ -122,7 +125,7 @@ $result = $stmt->get_result();
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         // Filter products using JavaScript
-        document.getElementById('filterButton').addEventListener('click', function() {
+        document.getElementById('filterButton').addEventListener('click', function () {
             const searchValue = document.getElementById('searchInput').value.toLowerCase();
             const minPrice = parseFloat(document.getElementById('minPriceInput').value) || 0;
             const maxPrice = parseFloat(document.getElementById('maxPriceInput').value) || Infinity;
@@ -203,7 +206,7 @@ $result = $stmt->get_result();
                 data: {
                     productID: productID
                 },
-                success: function(response) {
+                success: function (response) {
                     try {
                         const product = JSON.parse(response);
                         if (product) {
@@ -295,7 +298,7 @@ $result = $stmt->get_result();
                         console.error("Error parsing product details:", error);
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error("Error fetching product details:", error);
                 }
             });
@@ -340,7 +343,7 @@ $result = $stmt->get_result();
                     createdAt: createdAt,
                     updatedAt: updatedAt
                 },
-                success: function(response) {
+                success: function (response) {
 
                     try {
                         const responseData = JSON.parse(response);
@@ -390,7 +393,7 @@ $result = $stmt->get_result();
                         console.error("Error parsing response:", error);
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error("Add to cart error:", xhr.responseText);
                 }
             });
@@ -442,7 +445,7 @@ $result = $stmt->get_result();
             $('#cartTotal').text(total.toFixed(2));
 
             // Open modal when the cart icon is clicked
-            $('#cartIcon').click(function() {
+            $('#cartIcon').click(function () {
                 const modal = new bootstrap.Modal(document.getElementById('cartModal'));
                 modal.show();
             });
@@ -457,7 +460,7 @@ $result = $stmt->get_result();
                     productID: productID, // Make sure productID is included
                     variantID: variantID // Include variantID as well
                 },
-                success: function(response) {
+                success: function (response) {
                     try {
                         const responseData = JSON.parse(response);
                         if (responseData.error) {
@@ -477,18 +480,18 @@ $result = $stmt->get_result();
                         console.error("Error parsing response:", error);
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error("Remove from cart error:", xhr.responseText);
                 }
             });
         }
 
         // Initialize the cart modal when the page loads
-        $(document).ready(function() {
+        $(document).ready(function () {
             $.ajax({
                 url: '../cart/get_cart.php', // Endpoint to fetch the cart data
                 method: 'GET',
-                success: function(response) {
+                success: function (response) {
                     try {
                         const responseData = JSON.parse(response); // Parse the JSON response
                         if (responseData && responseData.cart) {
@@ -503,14 +506,14 @@ $result = $stmt->get_result();
                         console.error("Error parsing the cart data:", error); // Handle errors if parsing fails
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error("Get cart error:", xhr.responseText); // Handle errors from the server response
                 }
             });
         });
 
         // Filter products using JavaScript
-        document.getElementById('filterButton').addEventListener('click', function() {
+        document.getElementById('filterButton').addEventListener('click', function () {
             const searchValue = document.getElementById('searchInput').value.toLowerCase();
             const minPrice = parseFloat(document.getElementById('minPriceInput').value) || 0;
             const maxPrice = parseFloat(document.getElementById('maxPriceInput').value) || Infinity;
@@ -555,14 +558,14 @@ $result = $stmt->get_result();
 
         function sendWelcomeMessage() {
             fetch('../chatbox/chatbot.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: "hello"
-                    }), // Custom message for welcome intent
-                })
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: "hello"
+                }), // Custom message for welcome intent
+            })
                 .then(response => response.json())
                 .then(data => {
                     const messages = document.getElementById('messages');
@@ -609,14 +612,14 @@ $result = $stmt->get_result();
                 // Replace loading bubble with bot response
                 loadingBubble.remove();
                 fetch('../chatbox/chatbot.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            message: userInput
-                        }),
-                    })
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: userInput
+                    }),
+                })
                     .then(response => response.json())
                     .then(data => {
                         messages.innerHTML += `
@@ -636,7 +639,7 @@ $result = $stmt->get_result();
             }, 1500); // delay for loading
         }
 
-        document.getElementById('userInput').addEventListener('keydown', function(event) {
+        document.getElementById('userInput').addEventListener('keydown', function (event) {
             if (event.key === 'Enter') {
                 sendMessage();
             }
