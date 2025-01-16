@@ -342,6 +342,115 @@ $orderData = getAllOrderData($conn, $customerID);
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        function addToCart(productID, productName, productPrice, productImage) {
+            $.ajax({
+                url: '../cart/add_to_cart.php',
+                method: 'POST',
+                data: {
+                    productID: productID,
+                    productName: productName,
+                    productPrice: productPrice,
+                    productImage: productImage
+                },
+                success: function(response) {
+                    const responseData = JSON.parse(response);
+                    const cartCountElement = document.getElementById('cartCount');
+                    cartCountElement.innerText = responseData.cartCount; // Update cart count
+                    updateCartModal(responseData.cart); // Update the modal with new cart data
+                }
+            });
+        }
+
+        // Update the cart modal with current cart data
+        function updateCartModal(cart) {
+            var cartItemsHTML = '';
+            var total = 0;
+
+            // Loop through each cart item and display it
+            cart.forEach(function(item) {
+                total += item.price * item.quantity; // Calculate total price
+                cartItemsHTML += `
+                <div class="cart-item card mb-3 shadow-sm">
+                    <div class="card-body d-flex justify-content-between align-items-center gap-3">
+                        <!-- Image and Details -->
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="../uploads/${item.image}" alt="${item.name}" class="rounded img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                            <div>
+                                <h6 class="mb-1">${item.name} <small class="text-muted">(x${item.quantity})</small></h6>
+                                <p class="mb-0 text-primary fw-bold">RM ${(Number(item.price)).toLocaleString(                                // Update the cart modal with current cart data
+                    function updateCartModal(cart) {
+                        var cartItemsHTML = '';
+                        var total = 0;
+
+                        // Loop through each cart item and display it
+                        cart.forEach(function(item) {
+                            total += item.price * item.quantity; // Calculate total price
+                            cartItemsHTML += `
+                                        <div class="cart-item card mb-3 shadow-sm">
+                                            <div class="card-body d-flex justify-content-between align-items-center gap-3">
+                                                <!-- Image and Details -->
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <img src="../uploads/${item.image}" alt="${item.name}" class="rounded img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                                                    <div>
+                                                        <h6 class="mb-1">${item.name} <small class="text-muted">(x${item.quantity})</small></h6>
+                                                        <p class="mb-0 text-primary fw-bold">RM ${(Number(item.price)).toLocaleString()}</p>
+                                                    </div>
+                                                </div>
+                                                <!-- Remove Button -->
+                                                <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.id})">
+                                                    <i class="bi bi-trash3"></i> Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                        `;
+                        });
+
+                        // Update cart content and total
+                        $('#cartItems').html(cartItemsHTML);
+                        $('#cartTotal').text(total.toLocaleString()); // Update total price
+                    })}</p>
+                            </div>
+                        </div>
+                        <!-- Remove Button -->
+                        <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.id})">
+                            <i class="bi bi-trash3"></i> Remove
+                        </button>
+                    </div>
+                </div>
+                `;
+            });
+
+            // Update cart content and total
+            $('#cartItems').html(cartItemsHTML);
+            $('#cartTotal').text(total.toLocaleString()); // Update total price
+        }
+
+        // Remove product from cart
+        function removeFromCart(productId) {
+            $.ajax({
+                url: '../cart/remove_from_cart.php',
+                method: 'POST',
+                data: {
+                    productID: productId
+                },
+                success: function(response) {
+                    try {
+                        const responseData = JSON.parse(response);
+                        updateCartModal(responseData.cart);
+                        const cartCountElement = document.getElementById('cartCount');
+                        if (responseData.cartCount !== undefined) {
+                            cartCountElement.innerText = responseData.cartCount;
+                        }
+                    } catch (error) {
+                        console.error("Error parsing response:", error);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Remove from cart error:", xhr.responseText);
+                }
+            });
+        }
+
         function cancelOrder(orderID) {
             // Open the modal
             $('#cancelOrderModal').modal('show');
