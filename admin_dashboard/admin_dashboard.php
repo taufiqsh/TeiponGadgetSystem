@@ -2,7 +2,7 @@
 session_start(); // Start session
 // Check if the admin is logged in
 if (!isset($_SESSION['userID']) || !isset($_SESSION['username'])) {
-  header("Location: login.php?error=invalid_role");
+  header("Location: ../login/login.php?error=Access denied");
   exit();
 }
 

@@ -77,7 +77,6 @@
 
       <!-- Additional Links -->
       <div class="mt-3 text-center">
-        <p class="mb-1"><a href="forgot_password.php" class="text-decoration-none">Forgot Password?</a></p>
         <p>Don't have an account? <a href="../register/register.php" class="text-decoration-none">Sign up</a></p>
       </div>
     </div>

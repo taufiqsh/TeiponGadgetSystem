@@ -20,7 +20,7 @@ if ($role === 'customer') {
     $passwordField = "staffPassword";
     $idField = "staffID";
 } else {
-    header("Location: login.php?error=invalid_role");
+    header("Location: ../login/login.php?error=Access denied");
     exit();
 }
 
