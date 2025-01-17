@@ -180,6 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <title>Edit Product</title>
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         /* Optional: Add a background color to the body for a softer look */
         body {
@@ -490,125 +491,123 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </div>
 
                     <div class="container-fluid py-4">
-    <div class="card shadow-lg border-0 rounded-3">
-        <div class="card-header bg-light py-3">
-            <h5 class="card-title mb-0">Product Variants</h5>
-        </div>
-        <div class="card-body" style="max-height: 600px; overflow-y: auto;">
-            <div class="accordion" id="variantAccordion">
-                <?php foreach ($productVariants as $index => $variant): ?>
-                    <div class="accordion-item border mb-3 rounded-3">
-                        <h2 class="accordion-header" id="heading<?php echo $index; ?>">
-                        <button class="accordion-button <?php echo $index > 0 ? 'collapsed' : ''; ?> fw-bold text-dark" type="button"
-                            data-bs-toggle="collapse" data-bs-target="#collapse<?php echo $index; ?>"
-                            aria-expanded="<?php echo $index === 0 ? 'true' : 'false'; ?>" aria-controls="collapse<?php echo $index; ?>">
-                            <?php echo $variant['productColor']; ?> -
-                            <?php echo $variant['productStorage'] == '1024' ? '1TB' : $variant['productStorage'] . 'GB'; ?> -
-                            <?php echo $variant['productRam']; ?>GB RAM
-                        </button>
-                        </h2>
-                        <div id="collapse<?php echo $index; ?>"
-                            class="accordion-collapse collapse <?php echo $index === 0 ? 'show' : ''; ?>"
-                            aria-labelledby="heading<?php echo $index; ?>"
-                            data-bs-parent="#variantAccordion">
-                            <div class="accordion-body bg-light">
-                                <input type="hidden" name="variantID[]" value="<?php echo $variant['variantID']; ?>">
-                                <div class="row g-4">
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <select class="form-select" id="variantColor<?php echo $index; ?>"
-                                                name="variantColor[<?php echo $index; ?>]"
-                                                onchange="toggleVariantColorOtherInput(<?php echo $index; ?>)"
-                                                required>
-                                                <option value="Black" <?php echo $variant['productColor'] == 'Black' ? 'selected' : ''; ?>>Black</option>
-                                                <option value="White" <?php echo $variant['productColor'] == 'White' ? 'selected' : ''; ?>>White</option>
-                                                <option value="Blue" <?php echo $variant['productColor'] == 'Blue' ? 'selected' : ''; ?>>Blue</option>
-                                                <?php if (!in_array($variant['productColor'], ['Black', 'White', 'Blue', 'Other'])): ?>
-                                                    <option value="<?php echo $variant['productColor']; ?>" selected>
-                                                        <?php echo $variant['productColor']; ?>
-                                                    </option>
-                                                <?php endif; ?>
-                                                <option value="Other" <?php echo $variant['productColor'] == 'Other' ? 'selected' : ''; ?>>Other</option>
-                                            </select>
-                                            <label for="variantColor<?php echo $index; ?>">Color</label>
-                                        </div>
-                                        <input type="text"
-                                            class="form-control mt-2"
-                                            id="variantColorOther<?php echo $index; ?>"
-                                            name="variantColorOther[<?php echo $index; ?>]"
-                                            value="<?php echo ($variant['productColor'] == 'Other') ? htmlspecialchars($variant['productColorOther'] ?? '') : ''; ?>"
-                                            style="display: <?php echo ($variant['productColor'] == 'Other') ? 'block' : 'none'; ?>;"
-                                            placeholder="Enter other color">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <select class="form-select" id="variantStorage<?php echo $index; ?>"
-                                                name="variantStorage[<?php echo $index; ?>]"
-                                                required>
-                                                <option value="64" <?php echo $variant['productStorage'] == '64' ? 'selected' : ''; ?>>64GB</option>
-                                                <option value="128" <?php echo $variant['productStorage'] == '128' ? 'selected' : ''; ?>>128GB</option>
-                                                <option value="256" <?php echo $variant['productStorage'] == '256' ? 'selected' : ''; ?>>256GB</option>
-                                                <option value="512" <?php echo $variant['productStorage'] == '512' ? 'selected' : ''; ?>>512GB</option>
-                                                <option value="1024" <?php echo $variant['productStorage'] == '1024' ? 'selected' : ''; ?>>1TB</option>
-                                            </select>
-                                            <label for="variantStorage<?php echo $index; ?>">Storage</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <select class="form-select" id="variantRam<?php echo $index; ?>"
-                                                name="variantRam[<?php echo $index; ?>]"
-                                                required>
-                                                <option value="4" <?php echo $variant['productRam'] == '4' ? 'selected' : ''; ?>>4GB</option>
-                                                <option value="8" <?php echo $variant['productRam'] == '8' ? 'selected' : ''; ?>>8GB</option>
-                                                <option value="16" <?php echo $variant['productRam'] == '16' ? 'selected' : ''; ?>>16GB</option>
-                                                <?php if (!in_array($variant['productRam'], ['4', '8', '16', 'Other'])): ?>
-                                                    <option value="<?php echo $variant['productRam']; ?>" selected>
-                                                        <?php echo $variant['productRam']; ?>GB
-                                                    </option>
-                                                <?php endif; ?>
-                                                <option value="Other" <?php echo $variant['productRam'] == 'Other' ? 'selected' : ''; ?>>Other</option>
-                                            </select>
-                                            <label for="variantRam<?php echo $index; ?>">RAM</label>
-                                        </div>
-                                        <input type="text"
-                                            class="form-control mt-2"
-                                            id="variantRamOther<?php echo $index; ?>"
-                                            name="variantRamOther[<?php echo $index; ?>]"
-                                            value="<?php echo ($variant['productRam'] == 'Other') ? htmlspecialchars($variant['productRamOther'] ?? '') : ''; ?>"
-                                            style="display: <?php echo ($variant['productRam'] == 'Other') ? 'block' : 'none'; ?>;"
-                                            placeholder="Enter other RAM">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <input type="number" class="form-control" id="variantStock<?php echo $index; ?>" name="variantStock[<?php echo $index; ?>]" value="<?php echo $variant['productStock']; ?>" required>
-                                            <label for="variantStock<?php echo $index; ?>">Stock</label>
-                                        </div>
-                                    </div>
+                        <div class="card shadow-lg border-0 rounded-3">
+                            <div class="card-header bg-light py-3">
+                                <h5 class="card-title mb-0">Product Variants</h5>
+                            </div>
+                            <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                                <div class="accordion" id="variantAccordion">
+                                    <?php foreach ($productVariants as $index => $variant): ?>
+                                        <div class="accordion-item border mb-3 rounded-3">
+                                            <h2 class="accordion-header" id="heading<?php echo $index; ?>">
+                                            <button class="accordion-button <?php echo $index > 0 ? 'collapsed' : ''; ?> fw-bold text-dark" type="button"
+                                                data-bs-toggle="collapse" data-bs-target="#collapse<?php echo $index; ?>"
+                                                aria-expanded="<?php echo $index === 0 ? 'true' : 'false'; ?>" aria-controls="collapse<?php echo $index; ?>">
+                                                <?php echo $variant['productColor']; ?> -
+                                                <?php echo $variant['productStorage'] == '1024' ? '1TB' : $variant['productStorage'] . 'GB'; ?> -
+                                                <?php echo $variant['productRam']; ?>GB RAM
+                                            </button>
+                                            </h2>
+                                            <div id="collapse<?php echo $index; ?>"
+                                                class="accordion-collapse collapse <?php echo $index === 0 ? 'show' : ''; ?>"
+                                                aria-labelledby="heading<?php echo $index; ?>"
+                                                data-bs-parent="#variantAccordion">
+                                                <div class="accordion-body bg-light">
+                                                    <input type="hidden" name="variantID[]" value="<?php echo $variant['variantID']; ?>">
+                                                    <div class="row g-4">
+                                                        <div class="col-md-6">
+                                                            <div class="form-floating">
+                                                                <select class="form-select" id="variantColor<?php echo $index; ?>"
+                                                                    name="variantColor[<?php echo $index; ?>]"
+                                                                    onchange="toggleVariantColorOtherInput(<?php echo $index; ?>)"
+                                                                    required>
+                                                                    <option value="Black" <?php echo $variant['productColor'] == 'Black' ? 'selected' : ''; ?>>Black</option>
+                                                                    <option value="White" <?php echo $variant['productColor'] == 'White' ? 'selected' : ''; ?>>White</option>
+                                                                    <option value="Blue" <?php echo $variant['productColor'] == 'Blue' ? 'selected' : ''; ?>>Blue</option>
+                                                                    <?php if (!in_array($variant['productColor'], ['Black', 'White', 'Blue', 'Other'])): ?>
+                                                                        <option value="<?php echo $variant['productColor']; ?>" selected>
+                                                                            <?php echo $variant['productColor']; ?>
+                                                                        </option>
+                                                                    <?php endif; ?>
+                                                                    <option value="Other" <?php echo $variant['productColor'] == 'Other' ? 'selected' : ''; ?>>Other</option>
+                                                                </select>
+                                                                <label for="variantColor<?php echo $index; ?>">Color</label>
+                                                            </div>
+                                                            <input type="text"
+                                                                class="form-control mt-2"
+                                                                id="variantColorOther<?php echo $index; ?>"
+                                                                name="variantColorOther[<?php echo $index; ?>]"
+                                                                value="<?php echo ($variant['productColor'] == 'Other') ? htmlspecialchars($variant['productColorOther'] ?? '') : ''; ?>"
+                                                                style="display: <?php echo ($variant['productColor'] == 'Other') ? 'block' : 'none'; ?>;"
+                                                                placeholder="Enter other color">
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-floating">
+                                                                <select class="form-select" id="variantStorage<?php echo $index; ?>"
+                                                                    name="variantStorage[<?php echo $index; ?>]"
+                                                                    required>
+                                                                    <option value="64" <?php echo $variant['productStorage'] == '64' ? 'selected' : ''; ?>>64GB</option>
+                                                                    <option value="128" <?php echo $variant['productStorage'] == '128' ? 'selected' : ''; ?>>128GB</option>
+                                                                    <option value="256" <?php echo $variant['productStorage'] == '256' ? 'selected' : ''; ?>>256GB</option>
+                                                                    <option value="512" <?php echo $variant['productStorage'] == '512' ? 'selected' : ''; ?>>512GB</option>
+                                                                    <option value="1024" <?php echo $variant['productStorage'] == '1024' ? 'selected' : ''; ?>>1TB</option>
+                                                                </select>
+                                                                <label for="variantStorage<?php echo $index; ?>">Storage</label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-floating">
+                                                                <select class="form-select" id="variantRam<?php echo $index; ?>"
+                                                                    name="variantRam[<?php echo $index; ?>]"
+                                                                    required>
+                                                                    <option value="4" <?php echo $variant['productRam'] == '4' ? 'selected' : ''; ?>>4GB</option>
+                                                                    <option value="8" <?php echo $variant['productRam'] == '8' ? 'selected' : ''; ?>>8GB</option>
+                                                                    <option value="16" <?php echo $variant['productRam'] == '16' ? 'selected' : ''; ?>>16GB</option>
+                                                                    <?php if (!in_array($variant['productRam'], ['4', '8', '16', 'Other'])): ?>
+                                                                        <option value="<?php echo $variant['productRam']; ?>" selected>
+                                                                            <?php echo $variant['productRam']; ?>GB
+                                                                        </option>
+                                                                    <?php endif; ?>
+                                                                    <option value="Other" <?php echo $variant['productRam'] == 'Other' ? 'selected' : ''; ?>>Other</option>
+                                                                </select>
+                                                                <label for="variantRam<?php echo $index; ?>">RAM</label>
+                                                            </div>
+                                                            <input type="text"
+                                                                class="form-control mt-2"
+                                                                id="variantRamOther<?php echo $index; ?>"
+                                                                name="variantRamOther[<?php echo $index; ?>]"
+                                                                value="<?php echo ($variant['productRam'] == 'Other') ? htmlspecialchars($variant['productRamOther'] ?? '') : ''; ?>"
+                                                                style="display: <?php echo ($variant['productRam'] == 'Other') ? 'block' : 'none'; ?>;"
+                                                                placeholder="Enter other RAM">
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-floating">
+                                                                <input type="number" class="form-control" id="variantStock<?php echo $index; ?>" name="variantStock[<?php echo $index; ?>]" value="<?php echo $variant['productStock']; ?>" required>
+                                                                <label for="variantStock<?php echo $index; ?>">Stock</label>
+                                                            </div>
+                                                        </div>
 
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
                                 </div>
                             </div>
                         </div>
                     </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    </div>
-</div>
                 </div>
-
-
-
-
                 <!-- Center-aligned Buttons -->
                 <div class="d-flex justify-content-end gap-3 mt-4">
-                    <button class="btn btn-secondary"
-                        onclick="location.href='manage_product.php'; return false;">Back</button>
-                    <button type="submit" class="btn btn-primary">Update Product</button>
+                    <button class="btn btn-outline-secondary" onclick="location.href='manage_product.php'; return false;">
+                        <i class="bi bi-arrow-left me-2"></i> Back
+                    </button>
+                    <button type="submit" class="btn btn-warning px-4">
+                        <i class="bi bi-pencil-square me-2"></i> Update Product
+                    </button>
                 </div>
+            </form>
         </div>
-        </form>
-    </div>
     </div>
 
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
