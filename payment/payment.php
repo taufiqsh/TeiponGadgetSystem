@@ -53,8 +53,23 @@ $qrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?data=" . urlencode($pa
                 Swal.fire({
                     icon: '<?= htmlspecialchars($_SESSION['message']['type']); ?>',
                     title: '<?= htmlspecialchars($_SESSION['message']['text']); ?>',
-                    showConfirmButton: false,
-                    timer: 3000
+                    showCancelButton: true,
+                    confirmButtonText: 'Go to Homepage',
+                    cancelButtonText: 'View Payment Page',
+                    showConfirmButton: true,
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    allowEnterKey: false,
+                    customClass: {
+                        confirmButton: 'btn btn-success',
+                        cancelButton: 'btn btn-primary'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '../customer/customer_home.php';
+                    } else if (result.dismiss === Swal.DismissReason.cancel) {
+                        window.location.href = 'view_payment.php?orderID=<?= $orderID; ?>';
+                    }
                 });
             </script>
             <?php unset($_SESSION['message']);
@@ -76,7 +91,8 @@ $qrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?data=" . urlencode($pa
             <form action="process_payment.php" method="POST" enctype="multipart/form-data">
                 <div class="mb-3">
                     <label for="paymentReceipt" class="form-label">Upload Receipt (PDF or Image)</label>
-                    <input type="file" class="form-control" id="paymentReceipt" name="paymentReceipt" accept="image/*,application/pdf" required>
+                    <input type="file" class="form-control" id="paymentReceipt" name="paymentReceipt"
+                        accept="image/*,application/pdf" required>
                 </div>
                 <input type="hidden" name="orderID" value="<?= $order['orderID']; ?>">
                 <button type="submit" class="btn btn-primary">Submit Receipt</button>
