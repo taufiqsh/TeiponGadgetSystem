@@ -62,9 +62,7 @@ try {
     $orderStmt->execute();
     $orderID = $orderStmt->insert_id;
 
-    // Insert order products
-    $checkedOutItems = []; // Track items added to the order
-
+    // Insert order products and update stock
     foreach ($cart as $item) {
         $productID = $item['productID'];
         $variantID = isset($item['variantID']) ? $item['variantID'] : null;
@@ -78,6 +76,19 @@ try {
         $orderProductStmt = $conn->prepare($orderProductSql);
         $orderProductStmt->bind_param("iiidid", $orderID, $productID, $variantID, $quantity, $price, $totalItemPrice);
         $orderProductStmt->execute();
+
+        // Update product stock in the productVariant table
+        $updateStockSql = "UPDATE productVariant 
+                           SET productStock = productStock - ? 
+                           WHERE variantID = ?";
+        $updateStockStmt = $conn->prepare($updateStockSql);
+        $updateStockStmt->bind_param("ii", $quantity, $variantID);
+        $updateStockStmt->execute();
+
+        // Check if stock update was successful
+        if ($conn->affected_rows === 0) {
+            throw new Exception("Failed to update stock for variant ID: " . $variantID);
+        }
 
         // Delete the item from the cart after processing
         $deleteCartSql = "DELETE FROM cart WHERE productID = ? AND variantID = ? AND customerID = ?";
@@ -94,3 +105,4 @@ try {
     echo "Error: " . $e->getMessage();
     exit();
 }
+?>

@@ -148,108 +148,109 @@ function showProductDetails(productID) {
 
 // Add product to cart
 function addToCart(productID, variantID, quantity) {
+  // Validate inputs
+  if (!productID || !variantID || !quantity || quantity <= 0) {
+    displayError("Invalid product or quantity. Please try again.");
+    return;
+  }
+
   const customerID = userID; // Fetch customerID from session (PHP side)
   const createdAt = new Date().toISOString();
   const updatedAt = createdAt;
 
-  // Get product details dynamically
-  const productNameElement = document.getElementById(
-    `productName_${productID}`
-  );
-  const productPriceElement = document.getElementById(
-    `productPrice_${productID}`
-  );
-  const productImageElement = document.getElementById(
-    `productImage_${productID}`
-  );
-  let productImage = "";
+  // Get product details from the DOM
+  const productNameElement = document.getElementById(`productName_${productID}`);
+  const productPriceElement = document.getElementById(`productPrice_${productID}`);
+  const productImageElement = document.getElementById(`productImage_${productID}`);
 
-  if (productImageElement) {
-    const imageUrl = productImageElement.src;
-    const url = new URL(imageUrl);
-    productImage = url.pathname.replace(/^.*?\/TeiponGadgetSystem\//, "/"); // Adjust path if necessary
-  }
-
-  // Ensure elements exist before using them
   if (!productNameElement || !productPriceElement || !productImageElement) {
-    console.error("Error: Missing product details in the DOM.");
-    return; // Exit the function if any element is missing
+    displayError("Error: Missing product details in the DOM.");
+    return;
   }
 
-  const productName = productNameElement.innerText;
-  const productPrice = Number(
+  const productName = productNameElement.innerText || "Unknown Product";
+  const productPrice = parseFloat(
     productPriceElement.innerText.replace("Price: RM ", "").trim()
-  );
+  ) || 0.0;
+  const productImage = productImageElement.src || "";
+
+  // Validate price
+  if (productPrice <= 0) {
+    displayError("Invalid product price. Please try again.");
+    return;
+  }
+
+  const addToCartButton = document.getElementById(`addToCartButton_${productID}`);
+
   $.ajax({
     url: "../cart/add_to_cart.php",
     method: "POST",
     data: {
-      productID: productID,
-      productName: productName,
-      productPrice: productPrice,
-      productImage: productImage,
+      productID: parseInt(productID, 10),
+      productName,
+      productPrice,
+      productImage,
       variantID: parseInt(variantID, 10),
       quantity: parseInt(quantity, 10),
-      createdAt: createdAt,
-      updatedAt: updatedAt,
+      createdAt,
+      updatedAt,
+    },
+    beforeSend: function () {
+      // Disable the add-to-cart button to prevent multiple submissions
+      if (addToCartButton) {
+        addToCartButton.disabled = true;
+      }
     },
     success: function (response) {
       try {
         const responseData = JSON.parse(response);
 
-        let successMessagesElement = document.getElementById("successMessages");
-        if (!successMessagesElement) {
-          successMessagesElement = document.createElement("div");
-          successMessagesElement.id = "successMessages";
-          document.body.appendChild(successMessagesElement);
+        if (responseData.error) {
+          displayError(responseData.error);
+          return;
         }
 
-        // Show success message if the server response is correct
-        if (responseData.cartCount !== undefined) {
-          const successMessage = document.createElement("div");
-          successMessage.className =
-            "alert alert-success alert-dismissible fade show";
-          successMessage.role = "alert";
-          successMessage.innerHTML = `Product added to cart successfully! <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
-          successMessagesElement.appendChild(successMessage);
+        // Success handling
+        displaySuccess("Product added to cart successfully!");
 
-          setTimeout(() => {
-            successMessage.classList.remove("show");
-            successMessage.classList.add("fade");
-            setTimeout(() => {
-              successMessage.remove();
-            }, 500);
-          }, 3000);
+        // Update cart count
+        const cartCountElement = document.getElementById("cartCount");
+        if (responseData.cartCount !== undefined && cartCountElement) {
+          cartCountElement.innerText = responseData.cartCount;
+        }
 
-          // Update cart count
-          const cartCountElement = document.getElementById("cartCount");
-          if (responseData.cartCount !== undefined) {
-            cartCountElement.innerText = responseData.cartCount;
-          }
+        // Update cart modal
+        if (responseData.cart) {
+          updateCartModal(responseData.cart);
+        }
 
-          // Update cart modal (refresh cart after adding item)
-          if (responseData.cart) {
-            updateCartModal(responseData.cart);
-          }
-
-          // Close the modal after the item has been added
-          const productModal = document.getElementById(
-            `productDetailsModal_${productID}`
-          );
+        // Close the product modal
+        const productModal = document.getElementById(`productDetailsModal_${productID}`);
+        if (productModal) {
           const modal = bootstrap.Modal.getInstance(productModal);
-          modal.hide();
-        } else {
-          console.error("Error: Cart count not returned in the response.");
+          if (modal) modal.hide();
         }
       } catch (error) {
-        console.error("Error parsing response:", error);
+        displayError("Error parsing server response.");
+        console.error("Error parsing response:", error, "Response:", response);
       }
     },
     error: function (xhr, status, error) {
-      console.error("Add to cart error:", xhr.responseText);
+      const errorMessage = xhr.responseText || "An error occurred while adding the product to the cart.";
+      displayError(errorMessage);
+      console.error("Add to cart error:", errorMessage, "Status:", status, "XHR:", xhr);
+    },
+    complete: function () {
+      // Re-enable the add-to-cart button
+      if (addToCartButton) {
+        addToCartButton.disabled = false;
+      }
     },
   });
 }
+
+
+
 // Update the cart modal with current cart data
 function updateCartModal(cart) {
   let cartItemsHTML = "";
@@ -325,31 +326,35 @@ function removeFromCart(productID, variantID) {
     url: "../cart/remove_from_cart.php",
     method: "POST",
     data: {
-      productID: productID, // Make sure productID is included
-      variantID: variantID, // Include variantID as well
+      productID,
+      variantID,
     },
     success: function (response) {
       try {
         const responseData = JSON.parse(response);
+
         if (responseData.error) {
-          console.error("Error:", responseData.error);
+          displayError(responseData.error);
           return;
         }
 
         // Update the modal with the new cart data
         updateCartModal(responseData.cart);
 
-        // Update the cart count in the UI
+        // Update the cart count
         const cartCountElement = document.getElementById("cartCount");
         if (responseData.cartCount !== undefined) {
           cartCountElement.innerText = responseData.cartCount;
         }
       } catch (error) {
+        displayError("Error parsing server response.");
         console.error("Error parsing response:", error);
       }
     },
     error: function (xhr, status, error) {
-      console.error("Remove from cart error:", xhr.responseText);
+      const errorMessage = xhr.responseText || "An error occurred while removing the product from the cart.";
+      displayError(errorMessage);
+      console.error("Remove from cart error:", errorMessage);
     },
   });
 }
@@ -382,4 +387,23 @@ $(document).ready(function () {
     },
   });
 });
+
+function displayError(message) {
+  Swal.fire({
+    icon: "error",
+    title: "Error",
+    text: message,
+    confirmButtonText: "OK",
+  });
+}
+
+function displaySuccess(message) {
+  Swal.fire({
+    icon: "success",
+    title: "Success",
+    text: message,
+    showConfirmButton: false,
+    timer: 3000, // Auto-hide after 3 seconds
+  });
+}
 

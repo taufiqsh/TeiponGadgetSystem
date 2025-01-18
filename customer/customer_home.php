@@ -45,8 +45,17 @@ $result = $stmt->get_result();
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="customer_home.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="customer_home.js"></script>
     <script src="chatbot.js"></script>
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <!-- SweetAlert2 JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         // Pass PHP session variables to JavaScript
         window.userID = <?php echo json_encode($_SESSION['userID'] ?? null); ?>;
@@ -90,78 +99,103 @@ $result = $stmt->get_result();
         <div class="row" id="productList">
             <?php
             // Fetch all products from the database (no filters applied)
-            $sql = "SELECT productID, productName, productDescription, productPrice, productImage FROM Product";
-            $result = $conn->query($sql);
+            $sql = "SELECT 
+            p.productID, 
+            p.productName, 
+            p.productDescription, 
+            p.productPrice, 
+            p.productImage,
+            MAX(v.productStock) AS maxStock
+        FROM Product p
+        JOIN productVariant v ON p.productID = v.productID
+        GROUP BY p.productID";
 
-            if ($result && $result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) {
-                    $productName = htmlspecialchars($row['productName']);
-                    $productDescription = htmlspecialchars($row['productDescription']);
-                    $productPrice = $row['productPrice'];
-                    $productImage = htmlspecialchars($row['productImage']);
+            if ($stmt = $conn->prepare($sql)) {
+                $stmt->execute();
+                $result = $stmt->get_result();
 
-                    echo '
-                <div class="col-md-3 col-sm-4 product-item" 
-                     data-name="' . strtolower($productName) . '" 
-                     data-price="' . $productPrice . '" 
-                     data-description="' . strtolower($productDescription) . '">
-                    <div class="text-center">
-                        <img src="../uploads/' . htmlspecialchars($productImage) . '" 
-                             alt="' . htmlspecialchars($productName) . '" 
-                             class="img-fluid product-image mb-3">
-                        <h5>' . htmlspecialchars($productName) . '</h5>
-                        <p>' . htmlspecialchars($productDescription) . '</p>
-                        <p class="fw-bold">Price: RM ' . number_format($productPrice, 2) . '</p>
-                        <button class="btn btn-primary" 
-                                onclick="showProductDetails(' . htmlspecialchars($row['productID']) . ')">
-                            Buy
-                        </button>
-                    </div>
+                if ($result && $result->num_rows > 0) {
+                    while ($row = $result->fetch_assoc()) {
+                        $productID = (int)$row['productID'];
+                        $productName = htmlspecialchars($row['productName'] ?? "Unknown Product");
+                        $productDescription = htmlspecialchars($row['productDescription'] ?? "No description available");
+                        $productPrice = is_numeric($row['productPrice']) ? number_format($row['productPrice'], 2) : "0.00";
+                        $productImage = htmlspecialchars($row['productImage'] ?? "default.jpg");
+                        $maxStock = (int)($row['maxStock'] ?? 0); // Default stock to 0 if null
+
+                        // Determine stock status
+                        $isOutOfStock = $maxStock <= 0;
+                        $stockStatusText = $isOutOfStock ? "Out of Stock" : "In Stock";
+
+                        echo '
+            <div class="col-md-3 col-sm-4 product-item" 
+                 data-name="' . strtolower($productName) . '" 
+                 data-price="' . $productPrice . '" 
+                 data-description="' . strtolower($productDescription) . '">
+                <div class="text-center">
+                    <img src="../uploads/' . $productImage . '" 
+                         alt="' . $productName . '" 
+                         class="img-fluid product-image mb-3">
+                    <h5>' . $productName . '</h5>
+                    <p>' . $productDescription . '</p>
+                    <p class="fw-bold">Price: RM ' . $productPrice . '</p>
+                    <p class="text-danger">' . $stockStatusText . '</p>
+                    <button class="btn btn-primary" 
+                            onclick="showProductDetails(' . $productID . ')" 
+                            ' . ($isOutOfStock ? 'disabled' : '') . '>
+                        Buy
+                    </button>
                 </div>
-                ';
+            </div>
+            ';
+                    }
+                } else {
+                    echo '<p class="text-center">No products available.</p>';
                 }
+
+                $stmt->close();
             } else {
-                echo '<p class="text-center">No products available.</p>';
+                echo '<p class="text-danger text-center">Error: Could not retrieve products.</p>';
             }
             ?>
+
         </div>
     </div>
 
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        
-// Filter products using JavaScript
-document.getElementById("filterButton").addEventListener("click", function () {
-  const searchValue = document
-    .getElementById("searchInput")
-    .value.toLowerCase();
-  const minPrice =
-    parseFloat(document.getElementById("minPriceInput").value) || 0;
-  const maxPrice =
-    parseFloat(document.getElementById("maxPriceInput").value) || Infinity;
-  const descriptionValue = document
-    .getElementById("descriptionFilterInput")
-    .value.toLowerCase();
+        // Filter products using JavaScript
+        document.getElementById("filterButton").addEventListener("click", function() {
+            const searchValue = document
+                .getElementById("searchInput")
+                .value.toLowerCase();
+            const minPrice =
+                parseFloat(document.getElementById("minPriceInput").value) || 0;
+            const maxPrice =
+                parseFloat(document.getElementById("maxPriceInput").value) || Infinity;
+            const descriptionValue = document
+                .getElementById("descriptionFilterInput")
+                .value.toLowerCase();
 
-  const productItems = document.querySelectorAll(".product-item");
+            const productItems = document.querySelectorAll(".product-item");
 
-  productItems.forEach((item) => {
-    const name = item.getAttribute("data-name");
-    const price = parseFloat(item.getAttribute("data-price"));
-    const description = item.getAttribute("data-description");
+            productItems.forEach((item) => {
+                const name = item.getAttribute("data-name");
+                const price = parseFloat(item.getAttribute("data-price"));
+                const description = item.getAttribute("data-description");
 
-    const matchesSearch = name.includes(searchValue);
-    const matchesPrice = price >= minPrice && price <= maxPrice;
-    const matchesDescription = description.includes(descriptionValue);
+                const matchesSearch = name.includes(searchValue);
+                const matchesPrice = price >= minPrice && price <= maxPrice;
+                const matchesDescription = description.includes(descriptionValue);
 
-    if (matchesSearch && matchesPrice && matchesDescription) {
-      item.style.display = ""; // Show the product item
-    } else {
-      item.style.display = "none"; // Hide the product item
-    }
-  });
-});
+                if (matchesSearch && matchesPrice && matchesDescription) {
+                    item.style.display = ""; // Show the product item
+                } else {
+                    item.style.display = "none"; // Hide the product item
+                }
+            });
+        });
     </script>
 
     <!-- chatbox -->
@@ -186,10 +220,6 @@ document.getElementById("filterButton").addEventListener("click", function () {
         </div>
     </section>
     <button id="open-chatbox" onclick="toggleChatbox()"> </button>
-
-    <script src="../assets/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
