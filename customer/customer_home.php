@@ -75,7 +75,7 @@ $result = $stmt->get_result();
     <!-- Filter Bar -->
     <div class="container filter-bar mt-4">
         <div class="row g-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <input type="text" id="searchInput" class="form-control" placeholder="Search for products...">
             </div>
             <div class="col-md-2">
@@ -92,8 +92,15 @@ $result = $stmt->get_result();
                     <i class="bi bi-search"></i> Filter
                 </button>
             </div>
+            <!-- Reset Button -->
+            <div class="col-md-1">
+                <button class="btn btn-secondary w-100" id="resetButton">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </button>
+            </div>
         </div>
     </div>
+
 
     <!-- Product Display -->
     <div class="container my-5">
@@ -104,11 +111,11 @@ $result = $stmt->get_result();
                     $productID = (int)$row['productID'];
                     $productName = htmlspecialchars($row['productName'] ?? "Unknown Product");
                     $productDescription = htmlspecialchars($row['productDescription'] ?? "No description available");
-                    $productPrice = is_numeric($row['productPrice']) ? number_format($row['productPrice'], 2) : "0.00";
+                    $productPrice = is_numeric($row['productPrice']) ? number_format((float)$row['productPrice'], 2, '.', '') : "0.00"; // Ensure price is a float.
                     $productImage = htmlspecialchars($row['productImage'] ?? "default.jpg");
 
                     echo '
-                    <div class="col-md-3 col-sm-4 product-item">
+                    <div class="col-md-3 col-sm-4 product-item" data-name="' . strtolower($productName) . '" data-price="' . $productPrice . '" data-description="' . strtolower($productDescription) . '">
                         <div class="text-center">
                             <img src="../uploads/' . $productImage . '" alt="' . $productName . '" class="img-fluid product-image mb-3">
                             <h5>' . $productName . '</h5>
@@ -127,8 +134,8 @@ $result = $stmt->get_result();
         </div>
     </div>
 
-        <!-- chatbox -->
-        <section id="chatbox-section" style="display: none;">
+    <!-- chatbox -->
+    <section id="chatbox-section" style="display: none;">
         <link rel="stylesheet" href="../chatbox/chatbot.css">
         <div id="chatbox-container">
             <div id="chatbox">
@@ -153,7 +160,7 @@ $result = $stmt->get_result();
 
     <script>
         // Filter products using JavaScript
-        document.getElementById("filterButton").addEventListener("click", function () {
+        document.getElementById("filterButton").addEventListener("click", function() {
             const searchValue = document.getElementById("searchInput").value.toLowerCase();
             const minPrice = parseFloat(document.getElementById("minPriceInput").value) || 0;
             const maxPrice = parseFloat(document.getElementById("maxPriceInput").value) || Infinity;
@@ -163,14 +170,29 @@ $result = $stmt->get_result();
 
             productItems.forEach((item) => {
                 const name = item.getAttribute("data-name") || "";
-                const price = parseFloat(item.getAttribute("data-price")) || 0;
+                const price = parseFloat(item.getAttribute("data-price")) || 0; // Ensure price is parsed as a float.
                 const description = item.getAttribute("data-description") || "";
 
                 const matchesSearch = name.includes(searchValue);
                 const matchesPrice = price >= minPrice && price <= maxPrice;
                 const matchesDescription = description.includes(descriptionValue);
 
+                // Only show item if it matches all filter criteria
                 item.style.display = matchesSearch && matchesPrice && matchesDescription ? "" : "none";
+            });
+        });
+
+        document.getElementById("resetButton").addEventListener("click", function() {
+            // Reset the input fields to their default values
+            document.getElementById("searchInput").value = "";
+            document.getElementById("minPriceInput").value = "";
+            document.getElementById("maxPriceInput").value = "";
+            document.getElementById("descriptionFilterInput").value = "";
+
+            // Display all products by resetting their visibility
+            const productItems = document.querySelectorAll(".product-item");
+            productItems.forEach((item) => {
+                item.style.display = ""; // Make sure all products are visible
             });
         });
     </script>
