@@ -49,7 +49,7 @@ $result = $stmt->get_result();
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="customer_home.js"></script>
-    <script src="chatbot.js"></script>
+    <script src="../customer/chatbox.js"></script>
     <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
@@ -162,24 +162,53 @@ $result = $stmt->get_result();
         </div>
     </div>
 
+    <!-- chatbox -->
+    <section id="chatbox-section" style="display: none;">
+        <link rel="stylesheet" href="../chatbox/chatbot.css">
+        <div id="chatbox-container">
+            <div id="chatbox">
+                <div id="chat-header">
+                    <h3>
+                        <img src="../chatbox/img/teiponBot-icon.png" alt="Logo"> KOJEK
+                    </h3>
+                    <button id="close-btn" onclick="minimizeChat()">×</button>
+                </div>
+                <div id="messages"></div>
+                <div id="input-area">
+                    <input type="text" id="userInput" class="form-control" placeholder="Type your message here...">
+                    <button id="send-btn" onclick="sendMessage()">
+                        <i class="bi bi-rocket-takeoff"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+    <button id="open-chatbox" onclick="toggleChatbox()"> </button>
+    <!-- end of chatbox -->
+
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        // Filter products using JavaScript
-        document.getElementById("filterButton").addEventListener("click", function() {
-            const searchValue = document
-                .getElementById("searchInput")
-                .value.toLowerCase();
-            const minPrice =
-                parseFloat(document.getElementById("minPriceInput").value) || 0;
-            const maxPrice =
-                parseFloat(document.getElementById("maxPriceInput").value) || Infinity;
-            const descriptionValue = document
-                .getElementById("descriptionFilterInput")
-                .value.toLowerCase();
+        
+// Filter products using JavaScript
+document.getElementById("filterButton").addEventListener("click", function () {
+  const searchValue = document
+    .getElementById("searchInput")
+    .value.toLowerCase();
+  const minPrice =
+    parseFloat(document.getElementById("minPriceInput").value) || 0;
+  const maxPrice =
+    parseFloat(document.getElementById("maxPriceInput").value) || Infinity;
+  const descriptionValue = document
+    .getElementById("descriptionFilterInput")
+    .value.toLowerCase();
 
             const productItems = document.querySelectorAll(".product-item");
 
+            productItems.forEach((item) => {
+                const name = item.getAttribute("data-name");
+                const price = parseFloat(item.getAttribute("data-price"));
+                const description = item.getAttribute("data-description");
             productItems.forEach((item) => {
                 const name = item.getAttribute("data-name");
                 const price = parseFloat(item.getAttribute("data-price"));
@@ -220,6 +249,10 @@ $result = $stmt->get_result();
         </div>
     </section>
     <button id="open-chatbox" onclick="toggleChatbox()"> </button>
+
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
