@@ -35,7 +35,7 @@ $responseText = ''; // Initialize response
 try {
     switch ($intentName) {
         case 'Default Welcome Intent':
-            $responseText = "Hi! I'm Kojek. Here's how I can assist you: -<br>" .
+            $responseText = "Hi! I'm <b>Kojek</b>. Here's how I can assist you: -<br>" .
                 "<ul>" .
                 "<li>List Android or iPhone phones</li>" .
                 "<li>Check phone brands</li>" .
@@ -159,7 +159,7 @@ try {
             if (count($results) >= 2) {
                 $responseText = "Comparison between products:";
                 foreach ($results as $product) {
-                    $responseText .= "<li>{$product['productName']}:</li><ul>";
+                    $responseText .= "<li><b>{$product['productName']}</b>:</li><ul>";
                     $responseText .= "<li>Price: RM {$product['productPrice']}</li>";
                     $responseText .= "<li>Screen Size: {$product['productScreenSize']}</li>";
                     $responseText .= "<li>Battery Capacity: {$product['productBatteryCapacity']}</li>";
@@ -184,7 +184,7 @@ try {
             if ($results) {
                 $responseText = "Here are the Android phones we have: ";
                 foreach ($results as $product) {
-                    $responseText .= "<li>{$product['productName']} ({$product['productBrand']})<br>RM {$product['productPrice']}</li>";
+                    $responseText .= "<ul><li><b>{$product['productName']}</b> ({$product['productBrand']})<br>RM {$product['productPrice']}</ul></li>";
                 }
             } else {
                 $responseText = "We currently do not have any Android phones in our inventory.";
@@ -204,7 +204,7 @@ try {
             if ($results) {
                 $responseText = "Here is the list of available phones:<ul>";
                 foreach ($results as $product) {
-                    $responseText .= "<li>{$product['productName']} ({$product['productBrand']}) - RM {$product['productPrice']} [OS: {$product['productOS']}]</li>";
+                    $responseText .= "<ul><li><b>{$product['productName']}</b> ({$product['productBrand']}) - RM {$product['productPrice']} [OS: {$product['productOS']}]</ul></li>";
                 }
                 $responseText .= "</ul>";
             } else {
@@ -224,7 +224,7 @@ try {
             if ($results) {
                 $responseText = "Here are the iPhones we have: ";
                 foreach ($results as $product) {
-                    $responseText .= "<li>{$product['productName']} ({$product['productBrand']})<br>RM {$product['productPrice']}</li>";
+                    $responseText .= "<ul><li><b>{$product['productName']}</b> ({$product['productBrand']})<br>RM {$product['productPrice']}</ul></li>";
                 }
             } else {
                 $responseText = "We currently do not have any iPhones in our inventory.";
@@ -232,7 +232,7 @@ try {
             break;
 
         case 'Check Phone Brand':
-            $phoneBrand = strtolower(trim($requestJson['queryResult']['parameters']['phoneBrand']));
+            $phoneBrand = strtolower(trim($requestJson['queryResult']['parameters']['productBrand']));
             $stmt = $conn->prepare("
                                 SELECT p.productName, p.productPrice 
                                 FROM product p 
@@ -244,12 +244,12 @@ try {
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             if ($results) {
-                $responseText = "Yes, we have the following phones from $phoneBrand: ";
+                $responseText = "Yes, we have the following phones from <b>$phoneBrand</b>: ";
                 foreach ($results as $product) {
-                    $responseText .= "<li>{$product['productName']}<br>RM {$product['productPrice']}</li>";
+                    $responseText .= "<ul><li>{$product['productName']}<br>RM {$product['productPrice']}</ul></li>";
                 }
             } else {
-                $responseText = "Sorry, we currently do not have any phones from $phoneBrand in our inventory.";
+                $responseText = "Sorry, we currently do not have any phones from <b>$phoneBrand</b> in our inventory.";
             }
             break;
 
@@ -263,9 +263,9 @@ try {
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             if ($results) {
-                $responseText = "Here are the 10 cheapest phones we have: ";
+                $responseText = "Here are top <b>top 10</b> cheapest phones we have: ";
                 foreach ($results as $product) {
-                    $responseText .= "<li>{$product['productName']} ({$product['productBrand']})<br>RM {$product['productPrice']}</li>";
+                    $responseText .= "<ul><li><b>{$product['productName']}</b> ({$product['productBrand']})<br>RM {$product['productPrice']}</ul></li>";
                 }
             } else {
                 $responseText = "Sorry, we currently have no phones in our inventory.";
@@ -282,9 +282,9 @@ try {
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             if ($results) {
-                $responseText = "Here are the 10 most expensive phones we have: ";
+                $responseText = "Here are the <b>top 10</b> most expensive phones we have: ";
                 foreach ($results as $product) {
-                    $responseText .= "<li>{$product['productName']} ({$product['productBrand']})<br>RM {$product['productPrice']}</li>";
+                    $responseText .= "<ul><li><b>{$product['productName']}</b> ({$product['productBrand']})<br>RM {$product['productPrice']}</ul></li>";
                 }
             } else {
                 $responseText = "Sorry, we currently have no phones in our inventory.";
@@ -298,7 +298,7 @@ try {
                         SELECT p.productName, p.productBrand, p.productPrice 
                         FROM product p 
                         WHERE p.productPrice <= :budget 
-                        ORDER BY p.productPrice ASC
+                        ORDER BY p.productPrice DESC LIMIT 10
                     ");
             $stmt->bindParam(':budget', $budget);
             $stmt->execute();
@@ -307,11 +307,11 @@ try {
             if ($results) {
                 $phones = [];
                 foreach ($results as $product) {
-                    $phones[] = "<ul><li>{$product['productName']} ({$product['productBrand']}) <br> RM {$product['productPrice']}</li></ul>";
+                    $phones[] = "<ul><li><b>{$product['productName']}</b> ({$product['productBrand']}) <br> RM {$product['productPrice']}</li></ul>";
                 }
                 $responseText = "Here are the phones you can get within a budget of RM{$budget}:\n" . implode("\n", $phones);
             } else {
-                $responseText = "Sorry, there are no phones available within a budget of RM{$budget}.";
+                $responseText = "Sorry, there are no phones available within a budget of <b>RM{$budget}</b>.";
             }
             break;
 
@@ -321,25 +321,27 @@ try {
             if (!empty($ram)) {
                 // Query to find phones with specified RAM
                 $stmt = $conn->prepare("
-                            SELECT p.productName, p.productBrand, p.productPrice 
-                            FROM product p 
-                            WHERE LOWER(p.productRam) LIKE :ram
-                        ");
+                                        SELECT DISTINCT
+                                            p.productID, p.productName, p.productBrand, p.productPrice
+                                        FROM 
+                                            product p JOIN productvariant pv ON p.productID = pv.productID
+                                        WHERE 
+                                            (pv.productRam LIKE :ram)");
                 $likeRam = "%$ram%";
                 $stmt->bindParam(':ram', $likeRam);
                 $stmt->execute();
                 $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 if ($results) {
-                    $responseText = "Here are the phones with {$ram} RAM: ";
+                    $responseText = "Here are the phones with <b>{$ram}GB</b> ram: ";
                     foreach ($results as $product) {
-                        $responseText .= "<li>{$product['productName']} ({$product['productBrand']}) <br> RM {$product['productPrice']}</li>";
+                        $responseText .= "<ul><li><b>{$product['productName']}</b> ({$product['productBrand']}) <br> RM {$product['productPrice']}</ul></li>";
                     }
                 } else {
-                    $responseText = "Sorry, we don't have any phones with {$ram}GB RAM in our inventory.";
+                    $responseText = "Sorry, we don't have any phones with <b>{$ram}GB</b> ram in our inventory.";
                 }
             } else {
-                $responseText = "Please specify a valid RAM size.";
+                $responseText = "Please specify a valid 'ram' size.";
             }
             break;
 
@@ -349,22 +351,54 @@ try {
             if (!empty($storage)) {
                 // Query to find phones with specified storage
                 $stmt = $conn->prepare("
-                            SELECT p.productName, p.productBrand, p.productPrice 
-                            FROM product p 
-                            WHERE LOWER(p.productStorage) LIKE :storage
-                        ");
+                                        SELECT DISTINCT
+                                            p.productID, p.productName, p.productBrand, p.productPrice
+                                        FROM 
+                                            product p JOIN productvariant pv ON p.productID = pv.productID
+                                        WHERE 
+                                            (pv.productStorage LIKE :storage)");
                 $likeStorage = "%$storage%";
                 $stmt->bindParam(':storage', $likeStorage);
                 $stmt->execute();
                 $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 if ($results) {
-                    $responseText = "Here are the phones with {$storage} storage: ";
+                    $responseText = "Here are the phones with <b>{$storage}GB</b> storage: ";
                     foreach ($results as $product) {
-                        $responseText .= "<li>{$product['productName']} ({$product['productBrand']}) <br> RM {$product['productPrice']}</li>";
+                        $responseText .= "<ul><li><b>{$product['productName']}</b> ({$product['productBrand']}) <br> RM {$product['productPrice']}</ul></li>";
                     }
                 } else {
-                    $responseText = "Sorry, we don't have any phones with {$storage}GB storage in our inventory.";
+                    $responseText = "Sorry, we don't have any phones with <b>{$storage}GB</b> storage in our inventory.";
+                }
+            } else {
+                $responseText = "Please specify a valid storage size.";
+            }
+            break;
+
+        case 'Check Phone by Colors':
+            $colors = strtolower(trim($requestJson['queryResult']['parameters']['colors']));
+
+            if (!empty($colors)) {
+                // Query to find phones with specified storage
+                $stmt = $conn->prepare("
+                                            SELECT DISTINCT
+                                                p.productID, p.productName, p.productBrand, p.productPrice
+                                            FROM 
+                                                product p JOIN productvariant pv ON p.productID = pv.productID
+                                            WHERE 
+                                                (pv.productColor LIKE :colors)");
+                $likeColors = "%$colors%";
+                $stmt->bindParam(':colors', $likeColors);
+                $stmt->execute();
+                $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                if ($results) {
+                    $responseText = "Here are the phones with '<b>{$colors}</b>' color: ";
+                    foreach ($results as $product) {
+                        $responseText .= "<ul><li><b>{$product['productName']}</b> ({$product['productBrand']}) <br> RM {$product['productPrice']}</ul></li>";
+                    }
+                } else {
+                    $responseText = "Sorry, we don't have any phones with '<b>{$colors}</b>' color in our inventory.";
                 }
             } else {
                 $responseText = "Please specify a valid storage size.";
@@ -389,7 +423,7 @@ try {
                 if ($results) {
                     $responseText = "Here are the phones with '{$cameraSpecs}' camera specs: ";
                     foreach ($results as $product) {
-                        $responseText .= "<li>{$product['productName']} ({$product['productBrand']}) <br> RM {$product['productPrice']}</li>";
+                        $responseText .= "<ul><li><b>{$product['productName']}</b> ({$product['productBrand']}) <br> RM {$product['productPrice']}</ul></li>";
                     }
                 } else {
                     $responseText = "Sorry, we don't have any phones with '{$cameraSpecs}MP' camera in our inventory.";
