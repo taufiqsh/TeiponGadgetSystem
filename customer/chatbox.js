@@ -96,8 +96,15 @@ function sendMessage() {
     }, 1500); // delay for loading
 }
 
-document.getElementById('userInput').addEventListener('keydown', function (event) {
-    if (event.key === 'Enter') {
-        sendMessage();
+window.onload = function() {
+    const userInput = document.getElementById('userInput');
+    if (userInput) {
+        userInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+//              console.log('Key pressed:', event.key);
+                sendMessage();
+                event.preventDefault(); // Prevent default form submission
+            }
+        });
     }
-});
+};

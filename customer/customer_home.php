@@ -46,7 +46,7 @@ $result = $stmt->get_result();
     <link href="../assets/css/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="customer_home.css" rel="stylesheet">
     <script src="customer_home.js"></script>
-    <script src="chatbot.js"></script>
+    <script src="../customer/chatbox.js"></script>
     <script>
         // Pass PHP session variables to JavaScript
         window.userID = <?php echo json_encode($_SESSION['userID'] ?? null); ?>;
@@ -127,43 +127,6 @@ $result = $stmt->get_result();
         </div>
     </div>
 
-    <script src="../assets/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        
-// Filter products using JavaScript
-document.getElementById("filterButton").addEventListener("click", function () {
-  const searchValue = document
-    .getElementById("searchInput")
-    .value.toLowerCase();
-  const minPrice =
-    parseFloat(document.getElementById("minPriceInput").value) || 0;
-  const maxPrice =
-    parseFloat(document.getElementById("maxPriceInput").value) || Infinity;
-  const descriptionValue = document
-    .getElementById("descriptionFilterInput")
-    .value.toLowerCase();
-
-  const productItems = document.querySelectorAll(".product-item");
-
-  productItems.forEach((item) => {
-    const name = item.getAttribute("data-name");
-    const price = parseFloat(item.getAttribute("data-price"));
-    const description = item.getAttribute("data-description");
-
-    const matchesSearch = name.includes(searchValue);
-    const matchesPrice = price >= minPrice && price <= maxPrice;
-    const matchesDescription = description.includes(descriptionValue);
-
-    if (matchesSearch && matchesPrice && matchesDescription) {
-      item.style.display = ""; // Show the product item
-    } else {
-      item.style.display = "none"; // Hide the product item
-    }
-  });
-});
-    </script>
-
     <!-- chatbox -->
     <section id="chatbox-section" style="display: none;">
         <link rel="stylesheet" href="../chatbox/chatbot.css">
@@ -186,7 +149,43 @@ document.getElementById("filterButton").addEventListener("click", function () {
         </div>
     </section>
     <button id="open-chatbox" onclick="toggleChatbox()"> </button>
+    <!-- end of chatbox -->
 
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Filter products using JavaScript
+        document.getElementById("filterButton").addEventListener("click", function() {
+            const searchValue = document
+                .getElementById("searchInput")
+                .value.toLowerCase();
+            const minPrice =
+                parseFloat(document.getElementById("minPriceInput").value) || 0;
+            const maxPrice =
+                parseFloat(document.getElementById("maxPriceInput").value) || Infinity;
+            const descriptionValue = document
+                .getElementById("descriptionFilterInput")
+                .value.toLowerCase();
+
+            const productItems = document.querySelectorAll(".product-item");
+
+            productItems.forEach((item) => {
+                const name = item.getAttribute("data-name");
+                const price = parseFloat(item.getAttribute("data-price"));
+                const description = item.getAttribute("data-description");
+
+                const matchesSearch = name.includes(searchValue);
+                const matchesPrice = price >= minPrice && price <= maxPrice;
+                const matchesDescription = description.includes(descriptionValue);
+
+                if (matchesSearch && matchesPrice && matchesDescription) {
+                    item.style.display = ""; // Show the product item
+                } else {
+                    item.style.display = "none"; // Hide the product item
+                }
+            });
+        });
+    </script>
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
