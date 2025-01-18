@@ -49,7 +49,7 @@ if (!in_array($fileType, $allowedFileTypes)) {
         'type' => 'error',
         'text' => 'Invalid file type. Please upload a PDF or image.',
     ];
-    header("Location: payment.php?orderID=" . htmlspecialchars($orderID));
+    header("Location: payment.php?orderID=" . htmlspecialchars($orderID));  // Redirect back to payment page
     exit();
 }
 
@@ -59,7 +59,7 @@ if ($fileSize > 5 * 1024 * 1024) {
         'type' => 'error',
         'text' => 'File size is too large. Max size is 5MB.',
     ];
-    header("Location: payment.php?orderID=" . htmlspecialchars($orderID));
+    header("Location: payment.php?orderID=" . htmlspecialchars($orderID));  // Redirect back to payment page
     exit();
 }
 

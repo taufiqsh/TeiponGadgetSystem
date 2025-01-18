@@ -50,30 +50,75 @@ $qrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?data=" . urlencode($pa
 
         <?php if (isset($_SESSION['message'])): ?>
             <script>
-                Swal.fire({
-                    icon: '<?= htmlspecialchars($_SESSION['message']['type']); ?>',
-                    title: '<?= htmlspecialchars($_SESSION['message']['text']); ?>',
-                    showCancelButton: true,
-                    confirmButtonText: 'Go to Homepage',
-                    cancelButtonText: 'View Payment Page',
-                    showConfirmButton: true,
-                    allowOutsideClick: false,
-                    allowEscapeKey: false,
-                    allowEnterKey: false,
-                    customClass: {
-                        confirmButton: 'btn btn-success',
-                        cancelButton: 'btn btn-primary'
+                // Get the message from the session
+                let fileError = <?= json_encode($_SESSION['message']); ?>;
+                console.log("file_error content:", fileError.type);
+
+                // Check for file error
+                if (fileError.type === 'error') {
+                    // Check for file error specifics (type and size)
+                    if (fileError.text.includes('Invalid file type')) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid File Type',
+                            text: fileError.text,
+                            showCancelButton: false,
+                            confirmButtonText: 'Close',
+                            customClass: {
+                                confirmButton: 'btn btn-danger'
+                            }
+                        });
+                    } else if (fileError.text.includes('File size is too large')) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'File Too Large',
+                            text: fileError.text,
+                            showCancelButton: false,
+                            confirmButtonText: 'Close',
+                            customClass: {
+                                confirmButton: 'btn btn-danger'
+                            }
+                        });
+                    } else {
+                        // General error alert
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: fileError.text,
+                            showCancelButton: false,
+                            confirmButtonText: 'Close',
+                            customClass: {
+                                confirmButton: 'btn btn-danger'
+                            }
+                        });
                     }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = '../customer/customer_home.php';
-                    } else if (result.dismiss === Swal.DismissReason.cancel) {
-                        window.location.href = 'view_payment.php?orderID=<?= $orderID; ?>';
-                    }
-                });
+                } else if (fileError.type === 'success') {
+                    // Success message handling
+                    Swal.fire({
+                        icon: 'success',
+                        title: fileError.text,
+                        showCancelButton: true,
+                        confirmButtonText: 'Go to Homepage',
+                        cancelButtonText: 'View Payment Page',
+                        showConfirmButton: true,
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        allowEnterKey: false,
+                        customClass: {
+                            confirmButton: 'btn btn-success',
+                            cancelButton: 'btn btn-primary'
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '../customer/customer_home.php';
+                        } else if (result.dismiss === Swal.DismissReason.cancel) {
+                            window.location.href = 'view_payment.php?orderID=<?= $orderID; ?>';
+                        }
+                    });
+                }
+                // Unset the session message after displaying it
+                <?php unset($_SESSION['message']); ?>
             </script>
-            <?php unset($_SESSION['message']);
-            ?>
         <?php endif; ?>
 
         <div class="alert alert-info">
