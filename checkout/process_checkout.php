@@ -51,6 +51,7 @@ try {
     $orderDetails = "Shipping Address: {$customer['customerAddress']}, {$customer['customerCity']}, {$customer['customerState']}, {$customer['customerPostalCode']}";
 
     // Insert the order
+    date_default_timezone_set('Asia/Kuala_Lumpur');
     $orderDate = date("Y-m-d");
     $orderStatus = 'Pending Payment';
 

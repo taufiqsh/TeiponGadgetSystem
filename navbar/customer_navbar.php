@@ -60,7 +60,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.p
             </a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
               <li><a class="dropdown-item" href="/TeiponGadgetSystem/payment/view_payment.php">My Purchases</a></li>
-              <li><a class="dropdown-item" href="/TeiponGadgetSystem/settings_page/customer_settings.php">Settings</a></li>
+              <li><a class="dropdown-item" href="/TeiponGadgetSystem/settings_page/customer_settings.php">Profile</a></li>
               <li><a class="dropdown-item" href="/TeiponGadgetSystem/logout/logout.php">Logout</a></li>
             </ul>
           </li>

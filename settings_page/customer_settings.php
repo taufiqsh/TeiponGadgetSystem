@@ -38,6 +38,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $newAddress = $_POST['address'];
     $newPassword = !empty($_POST['password']) ? password_hash($_POST['password'], PASSWORD_DEFAULT) : null;
 
+    // Check if the email is already taken by another user
+    $emailCheckSql = "SELECT customerEmail FROM Customer WHERE customerEmail = ? AND customerID != ?";
+    $emailCheckStmt = $conn->prepare($emailCheckSql);
+    $emailCheckStmt->bind_param("si", $newEmail, $customerID);
+    $emailCheckStmt->execute();
+    $emailCheckResult = $emailCheckStmt->get_result();
+
+    if ($emailCheckResult->num_rows > 0) {
+        // Email already exists, redirect with error message
+        header("Location: customer_settings.php?error=The email address is already taken");
+        exit();
+    }
+
+    // Check if the username is already taken by another user
+    $usernameCheckSql = "SELECT customerUsername FROM Customer WHERE customerUsername = ? AND customerID != ?";
+    $usernameCheckStmt = $conn->prepare($usernameCheckSql);
+    $usernameCheckStmt->bind_param("si", $newUsername, $customerID);
+    $usernameCheckStmt->execute();
+    $usernameCheckResult = $usernameCheckStmt->get_result();
+
+    if ($usernameCheckResult->num_rows > 0) {
+        // Username already exists, redirect with error message
+        header("Location: customer_settings.php?error=The username is already taken.");
+        exit();
+    }
     // Update customer details in the database
     if ($newPassword) {
         $updateSql = "UPDATE Customer SET customerName = ?, customerEmail = ?, customerUsername = ?, customerPhoneNumber = ?, customerState = ?, customerPostalCode = ?, customerCity = ?, customerAddress = ?, customerPassword = ? WHERE customerID = ?";
@@ -68,95 +93,162 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <title>Customer Settings</title>
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .form-section {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
 
-<body>
+<body class="bg-light">
     <!-- Navbar -->
     <?php include('../navbar/customer_navbar.php'); ?>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="container" style="margin-top: 30px; margin-bottom: 30px;">
-            <h1 class="mb-4">Customer Settings</h1>
-
-            <!-- Success and Error Messages -->
-            <?php if (isset($_GET['success'])): ?>
-                <div class="alert alert-success"><?php echo htmlspecialchars($_GET['success']); ?></div>
-            <?php elseif (isset($error)): ?>
-                <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
-            <?php endif; ?>
-
-            <!-- Customer Edit Form -->
-            <form action="" method="POST">
-                <div class="mb-3">
-                    <label for="name" class="form-label">Name</label>
-                    <input type="text" class="form-control" id="name" name="name"
-                        value="<?php echo htmlspecialchars($customer['customerName']); ?>" required>
-                </div>
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="email" name="email"
-                        value="<?php echo htmlspecialchars($customer['customerEmail']); ?>" required>
-                </div>
-                <div class="mb-3">
-                    <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="username" name="username"
-                        value="<?php echo htmlspecialchars($customer['customerUsername']); ?>" required>
-                </div>
-                <div class="mb-3">
-                    <label for="phoneNumber" class="form-label">Phone Number</label>
-                    <input type="text" class="form-control" id="phoneNumber" name="phoneNumber"
-                        value="<?php echo htmlspecialchars($customer['customerPhoneNumber']); ?>" required>
-                </div>
-                <div class="mb-3">
-                    <label for="state" class="form-label">State</label>
-                    <input type="text" class="form-control" id="state" name="state"
-                        value="<?php echo htmlspecialchars($customer['customerState']); ?>" required>
-                </div>
-                <div class="mb-3">
-                    <label for="postalCode" class="form-label">Postal Code</label>
-                    <input type="text" class="form-control" id="postalCode" name="postalCode"
-                        value="<?php echo htmlspecialchars($customer['customerPostalCode']); ?>" required>
-                </div>
-                <div class="mb-3">
-                    <label for="city" class="form-label">City</label>
-                    <input type="text" class="form-control" id="city" name="city"
-                        value="<?php echo htmlspecialchars($customer['customerCity']); ?>" required>
-                </div>
-                <div class="mb-3">
-                    <label for="address" class="form-label">Address</label>
-                    <input type="text" class="form-control" id="address" name="address"
-                        value="<?php echo htmlspecialchars($customer['customerAddress']); ?>" required>
-                </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label">New Password (optional)</label>
-                    <input type="password" class="form-control" id="password" name="password"
-                        placeholder="Leave blank to keep current password">
-                </div>
-                <button type="submit" class="btn btn-primary">Update Details</button>
-            </form>
+    <div class="container-fluid mt-1 pt-1">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h1 class="display-5 mb-3">Profile Settings</h1>
+                <p class="text-muted mb-1">Manage your account information and preferences</p>
+            </div>
         </div>
     </div>
-    <!-- Cart Modal -->
-    <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="cartModalLabel">Your Cart</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <!-- Main Content -->
+    <div class="container py-4">
+        <!-- Success and Error Messages -->
+        <?php if (isset($_GET['success'])): ?>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        <?php echo htmlspecialchars($_GET['success']); ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <div id="cartItems"></div>
-                    <h5 class="text-end mt-3">Total: RM <span id="cartTotal">0.00</span></h5>
+            </div>
+        <?php elseif (isset($_GET['error'])): ?>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <?php echo htmlspecialchars($_GET['error']); ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <a href="../checkout/checkout.php" class="btn btn-primary">Checkout</a>
-                </div>
+            </div>
+        <?php endif; ?>
+
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <form action="" method="POST" class="form-section p-4">
+                    <div class="row g-4">
+                        <!-- Personal Information Section -->
+                        <div class="col-12">
+                            <h4 class="mb-3"><i class="bi bi-person-fill me-2"></i>Personal Information</h4>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="name" name="name" placeholder="Your Name"
+                                    value="<?php echo htmlspecialchars($customer['customerName']); ?>" required>
+                                <label for="name">Full Name</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="username" name="username"
+                                    placeholder="Username"
+                                    value="<?php echo htmlspecialchars($customer['customerUsername']); ?>" required>
+                                <label for="username">Username</label>
+                            </div>
+                            <div class="error-message" id="usernameError"></div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="email" class="form-control" id="email" name="email" placeholder="Email"
+                                    value="<?php echo htmlspecialchars($customer['customerEmail']); ?>" required>
+                                <label for="email">Email Address</label>
+                            </div>
+                            <div class="error-message" id="emailError"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="phoneNumber" name="phoneNumber"
+                                    placeholder="Phone"
+                                    value="<?php echo htmlspecialchars(substr($customer['customerPhoneNumber'], 0)); ?>"
+                                    required oninput="validatePhoneNumber(event)">
+                                <label for="phoneNumber">Phone Number</label>
+                            </div>
+                        </div>
+                        <!-- Address Section -->
+                        <div class="col-12 mt-4">
+                            <h4 class="mb-3"><i class="bi bi-geo-alt-fill me-2"></i>Address Information</h4>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="address" name="address"
+                                    placeholder="Address"
+                                    value="<?php echo htmlspecialchars($customer['customerAddress']); ?>" required>
+                                <label for="address">Street Address</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <select class="form-select" id="state" name="state" required
+                                    data-saved-state="<?php echo htmlspecialchars($customer['customerState']); ?>">
+                                    <option value="">Select State</option>
+                                </select>
+                                <label for="state">State</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <select class="form-select" id="city" name="city" required
+                                    data-saved-city="<?php echo htmlspecialchars($customer['customerCity']); ?>">
+                                    <option value="">Select City</option>
+                                </select>
+                                <label for="city">City</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <select class="form-select" id="postalCode" name="postalCode" required
+                                    data-saved-postal="<?php echo htmlspecialchars($customer['customerPostalCode']); ?>">
+                                    <option value="">Select Postal Code</option>
+                                </select>
+                                <label for="postalCode">Postal Code</label>
+                            </div>
+                        </div>
+                        <!-- Password Section -->
+                        <div class="col-12 mt-4">
+                            <h4 class="mb-3"><i class="bi bi-lock-fill me-2"></i>Security</h4>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <input type="password" class="form-control" id="password" name="password"
+                                    placeholder="New Password">
+                                <label for="password">New Password (leave blank to keep current)</label>
+                            </div>
+                        </div>
+                        <!-- Submit Button -->
+                        <div class="col-12 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <i class="bi bi-check-circle me-2"></i>Update Profile
+                            </button>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
+    <script src="state-city-postal.js"></script>
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
@@ -266,6 +358,119 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     console.error("Get cart error:", xhr.responseText);
                 }
             });
+        });
+    </script>
+    <script>
+        function validatePhoneNumber(event) {
+            const input = event.target;
+            const prefix = "+60";
+            let phoneNumber = input.value;
+
+            // Ensure the phone number starts with the prefix
+            if (!phoneNumber.startsWith(prefix)) {
+                phoneNumber = prefix + phoneNumber.substring(3);  // Keep prefix non-editable
+            }
+
+            // Set the value so the user can only edit the number after the prefix
+            input.value = phoneNumber;
+
+            // Limit the phone number length (10 digits total, including +60)
+            if (input.value.length > 12) {
+                input.value = input.value.substring(0, 12);
+            }
+        }
+    </script>
+    <script>
+        document.getElementById('email').addEventListener('input', function () {
+            const emailInput = this.value.trim();
+            const errorDiv = document.getElementById('emailError');
+            const emailField = document.getElementById('email');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;  // Basic email format
+
+            // Clear previous error message if input is empty
+            if (emailInput.length === 0) {
+                errorDiv.textContent = "";
+                emailField.classList.remove('is-invalid');
+            }
+            // Check email format
+            else if (!emailRegex.test(emailInput)) {
+                errorDiv.textContent = "Please enter a valid email address.";
+                errorDiv.style.color = "red";
+                emailField.classList.add('is-invalid');
+            }
+            // If the email format is valid, proceed to check if it's already taken
+            else {
+                const xhr = new XMLHttpRequest();
+                xhr.open("POST", "../register/check_register.php", true);  // Reusing check_register.php
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        const response = xhr.responseText.trim();
+                        console.log("Server response:", response);  // Add this line for debugging
+
+                        // Handle server response: 'taken' or 'available'
+                        if (response === "taken") {
+                            errorDiv.textContent = "Email is already registered.";
+                            errorDiv.style.color = "red";
+                            emailField.classList.add('is-invalid');
+                        } else if (response === "available") {
+                            errorDiv.textContent = "Email is available.";
+                            errorDiv.style.color = "green";
+                            emailField.classList.remove('is-invalid');
+                        } else if (response === "invalid_email") {
+                            errorDiv.textContent = "Please enter a valid email address.";
+                            errorDiv.style.color = "red";
+                            emailField.classList.add('is-invalid');
+                        } else {
+                            errorDiv.textContent = "An error occurred. Please try again later.";
+                            errorDiv.style.color = "red";
+                            emailField.classList.add('is-invalid');
+                        }
+                    }
+                };
+
+
+                // Send the email to the server for validation
+                xhr.send("email=" + encodeURIComponent(emailInput));
+            }
+        });
+    </script>
+    <script>
+        // Real-time Username Check
+        document.getElementById('username').addEventListener('input', function () {
+            const usernameInput = this.value.trim();
+            const errorDiv = document.getElementById('usernameError');
+            const usernameField = document.getElementById('username');
+
+            if (usernameInput.length === 0) {
+                errorDiv.textContent = "";
+                usernameField.classList.remove('is-invalid');
+            } else if (usernameInput.length < 4) {
+                errorDiv.textContent = "Username must be at least 4 characters long.";
+                errorDiv.style.color = "red";
+                usernameField.classList.add('is-invalid');
+            } else {
+                const xhr = new XMLHttpRequest();
+                xhr.open("POST", "../register/check_register.php", true);  // Correct URL
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        if (xhr.responseText === "taken") {
+                            errorDiv.textContent = "Username is already taken.";
+                            errorDiv.style.color = "red";
+                            usernameField.classList.add('is-invalid');
+                        } else {
+                            errorDiv.textContent = "Username is available.";
+                            errorDiv.style.color = "green";
+                            usernameField.classList.remove('is-invalid');
+                        }
+                    }
+                };
+
+                xhr.send("username=" + encodeURIComponent(usernameInput));
+            }
         });
     </script>
 </body>
