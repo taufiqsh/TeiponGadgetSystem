@@ -1,4 +1,3 @@
-// Data for Malaysia's states and cities (no postal codes assigned)
 const stateCityPostalData = {
   Johor: {
     "Johor Bahru": ["80000", "80100", "80150", "80200", "80300"],
@@ -118,76 +117,72 @@ const stateCityPostalData = {
   },
 };
 
-function updateCityOptions() {
+document.addEventListener("DOMContentLoaded", function () {
   const stateSelect = document.getElementById("state");
   const citySelect = document.getElementById("city");
-  const postalCodeSelect = document.getElementById("postal_code");
+  const postalCodeSelect = document.getElementById("postalCode");
 
-  // Get the selected state
-  const selectedState = stateSelect.value;
+  // Get saved values from PHP
+  const savedState = stateSelect.getAttribute("data-saved-state");
+  const savedCity = citySelect.getAttribute("data-saved-city");
+  const savedPostalCode = postalCodeSelect.getAttribute("data-saved-postal");
 
-  // Clear existing city options and postal codes
-  citySelect.innerHTML =
-    '<option value="" disabled selected>Select your city</option>';
-  postalCodeSelect.innerHTML =
-    '<option value="" disabled selected>Select your postal code</option>';
+  // Initialize state dropdown
+  Object.keys(stateCityPostalData).forEach((state) => {
+    const option = document.createElement("option");
+    option.value = state;
+    option.textContent = state;
+    option.selected = state === savedState;
+    stateSelect.appendChild(option);
+  });
 
-  // Check if data exists for the selected state
-  if (selectedState && stateCityPostalData[selectedState]) {
-    const cities = Object.keys(stateCityPostalData[selectedState]);
+  // Function to update city dropdown
+  function updateCities(state) {
+    citySelect.innerHTML = '<option value="">Select City</option>';
+    postalCodeSelect.innerHTML = '<option value="">Select Postal Code</option>';
 
-    // Populate the city dropdown based on the selected state
-    cities.forEach((city) => {
-      const option = document.createElement("option");
-      option.value = city;
-      option.textContent = city;
-      citySelect.appendChild(option);
-    });
+    if (state && stateCityPostalData[state]) {
+      Object.keys(stateCityPostalData[state]).forEach((city) => {
+        const option = document.createElement("option");
+        option.value = city;
+        option.textContent = city;
+        option.selected = city === savedCity;
+        citySelect.appendChild(option);
+      });
+
+      // If we have a saved city, update postal codes
+      if (savedCity && state === savedState) {
+        updatePostalCodes(state, savedCity);
+      }
+    }
   }
-}
 
-// Function to update postal code options based on selected city
-function updatePostalCodeOptions() {
-  const stateSelect = document.getElementById("state");
-  const citySelect = document.getElementById("city");
-  const postalCodeSelect = document.getElementById("postal_code");
+  // Function to update postal codes dropdown
+  function updatePostalCodes(state, city) {
+    postalCodeSelect.innerHTML = '<option value="">Select Postal Code</option>';
 
-  // Get the selected state and city
-  const selectedState = stateSelect.value;
-  const selectedCity = citySelect.value;
-
-  // Clear existing postal code options
-  postalCodeSelect.innerHTML =
-    '<option value="" disabled selected>Select your postal code</option>';
-
-  // Check if data exists for the selected city
-  if (
-    selectedState &&
-    selectedCity &&
-    stateCityPostalData[selectedState][selectedCity]
-  ) {
-    const postalCodes = stateCityPostalData[selectedState][selectedCity];
-
-    // Populate the postal code dropdown based on the selected city
-    postalCodes.forEach((code) => {
-      const option = document.createElement("option");
-      option.value = code;
-      option.textContent = code;
-      postalCodeSelect.appendChild(option);
-    });
+    if (state && city && stateCityPostalData[state][city]) {
+      stateCityPostalData[state][city].forEach((postalCode) => {
+        const option = document.createElement("option");
+        option.value = postalCode;
+        option.textContent = postalCode;
+        option.selected = postalCode === savedPostalCode;
+        postalCodeSelect.appendChild(option);
+      });
+    }
   }
-}
 
-// Add event listener for state selection to update cities
-document.getElementById("state").addEventListener("change", updateCityOptions);
+  // Event listeners
+  stateSelect.addEventListener("change", function () {
+    updateCities(this.value);
+  });
 
-// Add event listener for city selection to update postal codes
-document
-  .getElementById("city")
-  .addEventListener("change", updatePostalCodeOptions);
+  citySelect.addEventListener("change", function () {
+    updatePostalCodes(stateSelect.value, this.value);
+  });
 
-// Initialize city and postal code options on page load
-document.addEventListener("DOMContentLoaded", () => {
-  updateCityOptions();
-  updatePostalCodeOptions();
+  // Initialize dropdowns with saved values
+  if (savedState) {
+    updateCities(savedState);
+  }
 });
