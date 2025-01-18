@@ -24,7 +24,28 @@ if (isset($_POST['productID'], $_POST['productName'], $_POST['productPrice'], $_
             throw new Exception("Connection failed: " . $conn->connect_error);
         }
 
-        // Check if the product with the variant already exists in the cart for this customer
+        // Step 1: Validate stock
+        $stockStmt = $conn->prepare("SELECT productStock FROM ProductVariant WHERE variantID = ?");
+        $stockStmt->bind_param("i", $variantID);
+        $stockStmt->execute();
+        $stockResult = $stockStmt->get_result();
+
+        if ($stockResult->num_rows > 0) {
+            $stockRow = $stockResult->fetch_assoc();
+            $currentStock = $stockRow['productStock'];
+
+            if ($currentStock < $quantity) {
+                // Not enough stock
+                echo json_encode(['error' => 'Insufficient stock for the selected variant.']);
+                exit;
+            }
+        } else {
+            echo json_encode(['error' => 'Product variant not found.']);
+            exit;
+        }
+        $stockStmt->close();
+
+        // Step 2: Check if the product with the variant already exists in the cart
         $stmt = $conn->prepare("SELECT quantity FROM CART WHERE productID = ? AND customerID = ? AND variantID = ?");
         $stmt->bind_param("iii", $productID, $customerID, $variantID);
         $stmt->execute();
@@ -35,6 +56,11 @@ if (isset($_POST['productID'], $_POST['productName'], $_POST['productPrice'], $_
             $row = $result->fetch_assoc();
             $newQuantity = $row['quantity'] + $quantity;
 
+            if ($newQuantity > $currentStock) {
+                echo json_encode(['error' => 'Adding this quantity exceeds available stock.']);
+                exit;
+            }
+
             $updateStmt = $conn->prepare("UPDATE CART SET quantity = ?, updatedAt = CURRENT_TIMESTAMP WHERE productID = ? AND customerID = ? AND variantID = ?");
             $updateStmt->bind_param("iiii", $newQuantity, $productID, $customerID, $variantID);
             $updateStmt->execute();
@@ -42,20 +68,26 @@ if (isset($_POST['productID'], $_POST['productName'], $_POST['productPrice'], $_
         } else {
             // If the product does not exist, insert a new row
             $insertStmt = $conn->prepare("INSERT INTO CART (productID, customerID, variantID, quantity, createdAt, updatedAt) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
-            $insertStmt->bind_param("iiii", $productID, $customerID, $variantID, $quantity);  // Added variantID
+            $insertStmt->bind_param("iiii", $productID, $customerID, $variantID, $quantity);
             $insertStmt->execute();
             $insertStmt->close();
         }
 
         $stmt->close();
 
-        // Fetch the updated cart count
+        // Step 3: Reduce the stock in ProductVariant
+        $updateStockStmt = $conn->prepare("UPDATE ProductVariant SET productStock = productStock - ? WHERE variantID = ?");
+        $updateStockStmt->bind_param("ii", $quantity, $variantID);
+        $updateStockStmt->execute();
+        $updateStockStmt->close();
+
+        // Step 4: Fetch the updated cart count
         $countStmt = $conn->prepare("SELECT SUM(quantity) AS cartCount FROM CART WHERE customerID = ?");
         $countStmt->bind_param("i", $customerID);
         $countStmt->execute();
         $countResult = $countStmt->get_result();
         $cartCountRow = $countResult->fetch_assoc();
-        $cartCount = $cartCountRow['cartCount'] ? $cartCountRow['cartCount'] : 0;  // Set to 0 if NULL
+        $cartCount = $cartCountRow['cartCount'] ? $cartCountRow['cartCount'] : 0;
         $countStmt->close();
 
         // Fetch the updated cart items with variantName
@@ -76,16 +108,16 @@ if (isset($_POST['productID'], $_POST['productName'], $_POST['productPrice'], $_
                 'productPrice' => $row['productPrice'],
                 'quantity' => $row['quantity'],
                 'productImage' => $row['productImage'],
-                'variantName' => $row['variantName'], // Ensure this is returned
+                'variantName' => $row['variantName'],
             ];
         }
         $cartItemsStmt->close();
 
         // Return the updated cart count and cart items
         echo json_encode([
-            'cart' => $cartItems, // Assuming you fetch cart items from the DB after the removal
+            'cart' => $cartItems,
             'cartCount' => $cartCount,
-            'productID' => $productID, // Add the productID here
+            'productID' => $productID,
         ]);
     } catch (Exception $e) {
         echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);

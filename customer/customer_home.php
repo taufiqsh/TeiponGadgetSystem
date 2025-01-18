@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once($_SERVER['DOCUMENT_ROOT'] . '/TeiponGadgetSystem/config/db_config.php');
-//dsdasdasda
+
 // Check if the user is logged in
 if (!isset($_SESSION['userID'])) {
     header("Location: ../login/login.php?error=Access denied");
@@ -9,27 +9,29 @@ if (!isset($_SESSION['userID'])) {
 }
 $userID = $_SESSION['userID'];
 
-// Fetch all products from the database
-$search = isset($_GET['search']) ? $_GET['search'] : '';
-$minPrice = isset($_GET['minPrice']) && is_numeric($_GET['minPrice']) ? intval($_GET['minPrice']) : 0;
-$maxPrice = isset($_GET['maxPrice']) && is_numeric($_GET['maxPrice']) ? intval($_GET['maxPrice']) : 10000;
-$descriptionFilter = isset($_GET['descriptionFilter']) ? $_GET['descriptionFilter'] : '';
+// Retrieve filters from GET request
+$search = $_GET['search'] ?? '';
+$minPrice = is_numeric($_GET['minPrice'] ?? null) ? (int)$_GET['minPrice'] : 0;
+$maxPrice = is_numeric($_GET['maxPrice'] ?? null) ? (int)$_GET['maxPrice'] : 10000;
+$descriptionFilter = $_GET['descriptionFilter'] ?? '';
 
-$sql = "SELECT productID, productName, productDescription, productPrice, productImage FROM Product WHERE productPrice BETWEEN ? AND ?";
+// Prepare SQL query with filters
+$sql = "SELECT productID, productName, productDescription, productPrice, productImage 
+        FROM Product 
+        WHERE productPrice BETWEEN ? AND ?";
 $params = [$minPrice, $maxPrice];
 
-if ($search) {
+if (!empty($search)) {
     $sql .= " AND productName LIKE ?";
-    $likeSearch = "%" . $search . "%";
-    $params[] = $likeSearch;
+    $params[] = "%" . $search . "%";
 }
 
-if ($descriptionFilter) {
+if (!empty($descriptionFilter)) {
     $sql .= " AND productDescription LIKE ?";
-    $likeDescription = "%" . $descriptionFilter . "%";
-    $params[] = $likeDescription;
+    $params[] = "%" . $descriptionFilter . "%";
 }
 
+// Fetch products from the database
 $stmt = $conn->prepare($sql);
 $stmt->bind_param(str_repeat("s", count($params)), ...$params);
 $stmt->execute();
@@ -45,8 +47,15 @@ $result = $stmt->get_result();
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="../assets/css/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="customer_home.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="customer_home.js"></script>
     <script src="../customer/chatbox.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
+
     <script>
         // Pass PHP session variables to JavaScript
         window.userID = <?php echo json_encode($_SESSION['userID'] ?? null); ?>;
@@ -63,6 +72,7 @@ $result = $stmt->get_result();
         </div>
     </section>
 
+    <!-- Filter Bar -->
     <div class="container filter-bar mt-4">
         <div class="row g-3">
             <div class="col-md-4">
@@ -89,106 +99,57 @@ $result = $stmt->get_result();
     <div class="container my-5">
         <div class="row" id="productList">
             <?php
-            // Fetch all products from the database (no filters applied)
-            $sql = "SELECT productID, productName, productDescription, productPrice, productImage FROM Product";
-            $result = $conn->query($sql);
-
             if ($result && $result->num_rows > 0) {
                 while ($row = $result->fetch_assoc()) {
-                    $productName = htmlspecialchars($row['productName']);
-                    $productDescription = htmlspecialchars($row['productDescription']);
-                    $productPrice = $row['productPrice'];
-                    $productImage = htmlspecialchars($row['productImage']);
+                    $productID = (int)$row['productID'];
+                    $productName = htmlspecialchars($row['productName'] ?? "Unknown Product");
+                    $productDescription = htmlspecialchars($row['productDescription'] ?? "No description available");
+                    $productPrice = is_numeric($row['productPrice']) ? number_format($row['productPrice'], 2) : "0.00";
+                    $productImage = htmlspecialchars($row['productImage'] ?? "default.jpg");
 
                     echo '
-                <div class="col-md-3 col-sm-4 product-item" 
-                     data-name="' . strtolower($productName) . '" 
-                     data-price="' . $productPrice . '" 
-                     data-description="' . strtolower($productDescription) . '">
-                    <div class="text-center">
-                        <img src="../uploads/' . htmlspecialchars($productImage) . '" 
-                             alt="' . htmlspecialchars($productName) . '" 
-                             class="img-fluid product-image mb-3">
-                        <h5>' . htmlspecialchars($productName) . '</h5>
-                        <p>' . htmlspecialchars($productDescription) . '</p>
-                        <p class="fw-bold">Price: RM ' . number_format($productPrice, 2) . '</p>
-                        <button class="btn btn-primary" 
-                                onclick="showProductDetails(' . htmlspecialchars($row['productID']) . ')">
-                            Buy
-                        </button>
+                    <div class="col-md-3 col-sm-4 product-item">
+                        <div class="text-center">
+                            <img src="../uploads/' . $productImage . '" alt="' . $productName . '" class="img-fluid product-image mb-3">
+                            <h5>' . $productName . '</h5>
+                            <p>' . $productDescription . '</p>
+                            <p class="fw-bold">Price: RM ' . $productPrice . '</p>
+                            <button class="btn btn-primary" onclick="showProductDetails(' . $productID . ')">View</button>
+                        </div>
                     </div>
-                </div>
-                ';
+                    ';
                 }
             } else {
                 echo '<p class="text-center">No products available.</p>';
             }
+            $stmt->close();
             ?>
         </div>
     </div>
 
-    <!-- chatbox -->
-    <section id="chatbox-section" style="display: none;">
-        <link rel="stylesheet" href="../chatbox/chatbot.css">
-        <div id="chatbox-container">
-            <div id="chatbox">
-                <div id="chat-header">
-                    <h3>
-                        <img src="../chatbox/img/teiponBot-icon.png" alt="Logo"> KOJEK
-                    </h3>
-                    <button id="close-btn" onclick="minimizeChat()">×</button>
-                </div>
-                <div id="messages"></div>
-                <div id="input-area">
-                    <input type="text" id="userInput" class="form-control" placeholder="Type your message here...">
-                    <button id="send-btn" onclick="sendMessage()">
-                        <i class="bi bi-rocket-takeoff"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </section>
-    <button id="open-chatbox" onclick="toggleChatbox()"> </button>
-    <!-- end of chatbox -->
-
-    <script src="../assets/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         // Filter products using JavaScript
-        document.getElementById("filterButton").addEventListener("click", function() {
-            const searchValue = document
-                .getElementById("searchInput")
-                .value.toLowerCase();
-            const minPrice =
-                parseFloat(document.getElementById("minPriceInput").value) || 0;
-            const maxPrice =
-                parseFloat(document.getElementById("maxPriceInput").value) || Infinity;
-            const descriptionValue = document
-                .getElementById("descriptionFilterInput")
-                .value.toLowerCase();
+        document.getElementById("filterButton").addEventListener("click", function () {
+            const searchValue = document.getElementById("searchInput").value.toLowerCase();
+            const minPrice = parseFloat(document.getElementById("minPriceInput").value) || 0;
+            const maxPrice = parseFloat(document.getElementById("maxPriceInput").value) || Infinity;
+            const descriptionValue = document.getElementById("descriptionFilterInput").value.toLowerCase();
 
             const productItems = document.querySelectorAll(".product-item");
 
             productItems.forEach((item) => {
-                const name = item.getAttribute("data-name");
-                const price = parseFloat(item.getAttribute("data-price"));
-                const description = item.getAttribute("data-description");
+                const name = item.getAttribute("data-name") || "";
+                const price = parseFloat(item.getAttribute("data-price")) || 0;
+                const description = item.getAttribute("data-description") || "";
 
                 const matchesSearch = name.includes(searchValue);
                 const matchesPrice = price >= minPrice && price <= maxPrice;
                 const matchesDescription = description.includes(descriptionValue);
 
-                if (matchesSearch && matchesPrice && matchesDescription) {
-                    item.style.display = ""; // Show the product item
-                } else {
-                    item.style.display = "none"; // Hide the product item
-                }
+                item.style.display = matchesSearch && matchesPrice && matchesDescription ? "" : "none";
             });
         });
     </script>
-    <script src="../assets/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
