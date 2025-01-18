@@ -33,6 +33,7 @@ $result = $conn->query($sql);
     <title>Manage Products</title>
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         /* Custom styles for better spacing */
         .product-image {
@@ -102,19 +103,19 @@ $result = $conn->query($sql);
     <div class="main-content">
         <div class="container mt-4">
             <h1 class="mb-4 text-center">Manage Products</h1>
-            
+
             <!-- Success or error message -->
             <?php if (isset($_GET['success'])): ?>
                 <div class="alert alert-success"><?php echo htmlspecialchars($_GET['success']); ?></div>
             <?php elseif (isset($_GET['error'])): ?>
                 <div class="alert alert-danger"><?php echo htmlspecialchars($_GET['error']); ?></div>
             <?php endif; ?>
-            
+
             <!-- Add Product Button -->
             <div class="text-right mb-4">
                 <a href="add_product.php" class="btn btn-success">Add New Product</a>
             </div>
-            
+
             <!-- Products Grid Layout (Cards) -->
             <div class="row">
                 <?php
@@ -130,7 +131,7 @@ $result = $conn->query($sql);
                         echo "<p><strong>Price:</strong> RM" . htmlspecialchars($row['productPrice']) . "</p>";
                         echo "<p><strong>Description:</strong> " . htmlspecialchars($row['productDescription']) . "</p>";
                         echo "<p><strong>Release Date:</strong> " . htmlspecialchars($row['productReleaseDate']) . "</p>";
-                        
+
                         // Display the image if available
                         if (!empty($row['productImage']) && file_exists('../uploads/' . $row['productImage'])) {
                             $imagePath = '../uploads/' . htmlspecialchars($row['productImage']);
@@ -140,36 +141,15 @@ $result = $conn->query($sql);
                         } else {
                             echo "<p>No Image Available</p>";
                         }
-                        
+
                         // Display actions (Edit and Delete buttons)
                         echo "<div class='btn-actions'>";
                         echo "<a href='edit_product.php?id=" . $row['productID'] . "' class='btn btn-warning btn-sm'>Edit</a>";
-                        echo "<a href='#' class='btn btn-danger btn-sm' data-bs-toggle='modal' data-bs-target='#deleteModal" . $row['productID'] . "'>Delete</a>";
+                        echo "<a href='#' class='btn btn-danger btn-sm delete-product' data-id='" . $row['productID'] . "'>Delete</a>";
                         echo "</div>";
                         echo "</div>"; // End of card-body
                         echo "</div>"; // End of card
-                        echo "</div>"; // End 
-
-                        // Modal for confirmation
-                        echo "
-                        <div class='modal fade' id='deleteModal" . $row['productID'] . "' tabindex='-1' aria-labelledby='deleteModalLabel" . $row['productID'] . "' aria-hidden='true'>
-                            <div class='modal-dialog'>
-                                <div class='modal-content'>
-                                    <div class='modal-header'>
-                                        <h5 class='modal-title' id='deleteModalLabel" . $row['productID'] . "'>Confirm Deletion</h5>
-                                        <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close'></button>
-                                    </div>
-                                    <div class='modal-body'>
-                                        <p><strong>Are you sure you want to delete this product?</strong></p>
-                                        <p>This action <span class='text-danger'>cannot</span> be undone. Once deleted, the product will be permanently removed from the system.</p>
-                                    </div>
-                                    <div class='modal-footer'>
-                                        <button type='button' class='btn btn-secondary' data-bs-dismiss='modal'>Cancel</button>
-                                        <a href='delete_product.php?id=" . $row['productID'] . "' class='btn btn-danger'>Delete</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>";
+                        echo "</div>"; // End of column
                     }
                 } else {
                     echo "<p class='text-center' colspan='12'>No products found</p>";
@@ -184,7 +164,7 @@ $result = $conn->query($sql);
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js"></script>
 
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             $('[data-fancybox="gallery"]').fancybox({
                 maxWidth: '90%',
                 maxHeight: '80vh',
@@ -195,6 +175,27 @@ $result = $conn->query($sql);
                 padding: 0,
                 zoom: false,
                 clickContent: false
+            });
+
+            // SweetAlert for Delete Confirmation
+            $(document).on('click', '.delete-product', function (e) {
+                e.preventDefault();
+                const productId = $(this).data('id');
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "This action cannot be undone!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = `delete_product.php?id=${productId}`;
+                    }
+                });
             });
         });
     </script>
