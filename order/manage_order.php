@@ -34,6 +34,8 @@ $result = $conn->query($sql);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Orders</title>
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.6.0/dist/sweetalert2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.6.0/dist/sweetalert2.all.min.js"></script>
     <style>
         .table-actions {
             display: flex;
@@ -164,17 +166,42 @@ $result = $conn->query($sql);
             xhr.open("POST", "update_order.php", true);
             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
-            xhr.onreadystatechange = function () {
+            xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
                     if (xhr.status === 200) {
                         if (xhr.responseText.trim() === "success") {
-                            alert("Order status updated successfully!");
+                            // Success - show SweetAlert
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Order status updated successfully!',
+                                confirmButtonText: 'OK',
+                                customClass: {
+                                    confirmButton: 'btn btn-success'
+                                }
+                            });
                         } else {
-                            alert("Failed to update order status. Please try again.");
-                            // Optionally, revert the dropdown to its previous value on failure
+                            // Failure - show SweetAlert
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Failed to update order status.',
+                                text: 'Please try again.',
+                                confirmButtonText: 'Close',
+                                customClass: {
+                                    confirmButton: 'btn btn-danger'
+                                }
+                            });
                         }
                     } else {
-                        alert("An error occurred while updating the status.");
+                        // Error - show SweetAlert
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'An error occurred while updating the status.',
+                            text: 'Please try again later.',
+                            confirmButtonText: 'Close',
+                            customClass: {
+                                confirmButton: 'btn btn-danger'
+                            }
+                        });
                     }
                 }
             };
@@ -185,7 +212,7 @@ $result = $conn->query($sql);
 
         document.addEventListener('DOMContentLoaded', () => {
             const deleteModal = document.getElementById('deleteModal');
-            deleteModal.addEventListener('show.bs.modal', function (event) {
+            deleteModal.addEventListener('show.bs.modal', function(event) {
                 const button = event.relatedTarget; // Button that triggered the modal
                 const orderID = button.getAttribute('data-order-id'); // Extract orderID
                 const deleteInput = document.getElementById('deleteOrderID'); // Hidden input in the form
