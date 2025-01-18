@@ -151,26 +151,6 @@ $result = $stmt->get_result();
         });
     </script>
 
-    <!-- Cart Modal -->
-    <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="cartModalLabel">Your Cart</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="cartItems"></div>
-                    <h5 class="text-end mt-3">Total: RM <span id="cartTotal">0.00</span></h5>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <a href="../checkout/checkout.php" class="btn btn-primary">Checkout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- chatbox -->
     <section id="chatbox-section" style="display: none;">
         <link rel="stylesheet" href="../chatbox/chatbot.css">
@@ -193,7 +173,6 @@ $result = $stmt->get_result();
         </div>
     </section>
     <button id="open-chatbox" onclick="toggleChatbox()"> </button>
-    <!-- end of chatbox -->
 
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

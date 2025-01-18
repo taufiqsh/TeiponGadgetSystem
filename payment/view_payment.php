@@ -342,6 +342,31 @@ $orderData = getAllOrderData($conn, $customerID);
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        $(document).ready(function() {
+            $.ajax({
+                url: '../cart/get_cart.php', // Endpoint to fetch the cart data
+                method: 'GET',
+                success: function(response) {
+                    try {
+                        const responseData = JSON.parse(response); // Parse the JSON response
+                        if (responseData && responseData.cart) {
+                            const cart = responseData.cart || []; // Get the cart array
+                            updateCartModal(cart); // Update the modal with the cart data
+
+                            // Update the cart count
+                            const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
+                            document.getElementById('cartCount').innerText = cartCount; // Update the cart count on the page
+                        }
+                    } catch (error) {
+                        console.error("Error parsing the cart data:", error); // Handle errors if parsing fails
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Get cart error:", xhr.responseText); // Handle errors from the server response
+                }
+            });
+        });
+
         function addToCart(productID, productName, productPrice, productImage) {
             $.ajax({
                 url: '../cart/add_to_cart.php',
@@ -363,66 +388,55 @@ $orderData = getAllOrderData($conn, $customerID);
 
         // Update the cart modal with current cart data
         function updateCartModal(cart) {
-            var cartItemsHTML = '';
-            var total = 0;
+            let cartItemsHTML = '';
+            let total = 0;
 
-            // Loop through each cart item and display it
-            cart.forEach(function(item) {
-                total += item.price * item.quantity; // Calculate total price
-                cartItemsHTML += `
-                <div class="cart-item card mb-3 shadow-sm">
-                    <div class="card-body d-flex justify-content-between align-items-center gap-3">
-                        <!-- Image and Details -->
-                        <div class="d-flex align-items-center gap-3">
-                            <img src="../uploads/${item.image}" alt="${item.name}" class="rounded img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
-                            <div>
-                                <h6 class="mb-1">${item.name} <small class="text-muted">(x${item.quantity})</small></h6>
-                                <p class="mb-0 text-primary fw-bold">RM ${(Number(item.price)).toLocaleString(                                // Update the cart modal with current cart data
-                    function updateCartModal(cart) {
-                        var cartItemsHTML = '';
-                        var total = 0;
+            // Check if cart is an array and has items
+            if (Array.isArray(cart) && cart.length > 0) {
+                cart.forEach(item => {
+                    if (item.productName && item.quantity && item.productPrice && item.productImage) {
+                        const itemPrice = Number(item.productPrice) || 0;
+                        const itemQuantity = item.quantity || 1;
+                        const itemTotalPrice = itemPrice * itemQuantity;
 
-                        // Loop through each cart item and display it
-                        cart.forEach(function(item) {
-                            total += item.price * item.quantity; // Calculate total price
-                            cartItemsHTML += `
-                                        <div class="cart-item card mb-3 shadow-sm">
-                                            <div class="card-body d-flex justify-content-between align-items-center gap-3">
-                                                <!-- Image and Details -->
-                                                <div class="d-flex align-items-center gap-3">
-                                                    <img src="../uploads/${item.image}" alt="${item.name}" class="rounded img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
-                                                    <div>
-                                                        <h6 class="mb-1">${item.name} <small class="text-muted">(x${item.quantity})</small></h6>
-                                                        <p class="mb-0 text-primary fw-bold">RM ${(Number(item.price)).toLocaleString()}</p>
-                                                    </div>
-                                                </div>
-                                                <!-- Remove Button -->
-                                                <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.id})">
-                                                    <i class="bi bi-trash3"></i> Remove
-                                                </button>
-                                            </div>
-                                        </div>
-                                        `;
-                        });
-
-                        // Update cart content and total
-                        $('#cartItems').html(cartItemsHTML);
-                        $('#cartTotal').text(total.toLocaleString()); // Update total price
-                    })}</p>
+                        // Build the cart item HTML
+                        cartItemsHTML += `
+                    <div class="cart-item card mb-3 shadow-sm" data-product-id="${item.productID}" data-variant-id="${item.variantID}">
+                        <div class="card-body d-flex justify-content-between align-items-center gap-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="../uploads/${item.productImage}" alt="${item.productName}" class="rounded img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                                <div>
+                                    <h6 class="mb-1">${item.productName} 
+                                        <small class="text-muted">(x${itemQuantity})</small>
+                                        ${item.variantName ? `<br><small class="text-muted">Variant: ${item.variantName}</small>` : ''}
+                                    </h6>
+                                    <p class="mb-0 text-primary fw-bold">RM ${(itemTotalPrice).toFixed(2)}</p>
+                                </div>
                             </div>
+                            <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.productID}, ${item.variantID})">
+                                <i class="bi bi-trash3"></i> Remove
+                            </button>
                         </div>
-                        <!-- Remove Button -->
-                        <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.id})">
-                            <i class="bi bi-trash3"></i> Remove
-                        </button>
                     </div>
-                </div>
                 `;
-            });
 
-            // Update cart content and total
+
+                        total += itemTotalPrice;
+                    }
+                });
+            } else {
+                cartItemsHTML = '<p class="text-center">Your cart is empty.</p>';
+            }
+
+            // Update the cart items and total price displayed in the modal
             $('#cartItems').html(cartItemsHTML);
-            $('#cartTotal').text(total.toLocaleString()); // Update total price
+            $('#cartTotal').text(total.toFixed(2));
+
+            // Open modal when the cart icon is clicked
+            $('#cartIcon').click(function() {
+                const modal = new bootstrap.Modal(document.getElementById('cartModal'));
+                modal.show();
+            });
         }
 
         // Remove product from cart
@@ -445,7 +459,7 @@ $orderData = getAllOrderData($conn, $customerID);
                         console.error("Error parsing response:", error);
                     }
                 },
-                error: function (xhr, status, error) {
+                error: function(xhr, status, error) {
                     console.error("Remove from cart error:", xhr.responseText);
                 }
             });
@@ -638,6 +652,41 @@ $orderData = getAllOrderData($conn, $customerID);
             setTimeout(() => {
                 alertBox.remove();
             }, 5000);
+        }
+
+        // Remove product from cart
+        function removeFromCart(productID, variantID) {
+            $.ajax({
+                url: '../cart/remove_from_cart.php',
+                method: 'POST',
+                data: {
+                    productID: productID, // Make sure productID is included
+                    variantID: variantID // Include variantID as well
+                },
+                success: function (response) {
+                    try {
+                        const responseData = JSON.parse(response);
+                        if (responseData.error) {
+                            console.error("Error:", responseData.error);
+                            return;
+                        }
+
+                        // Update the modal with the new cart data
+                        updateCartModal(responseData.cart);
+
+                        // Update the cart count in the UI
+                        const cartCountElement = document.getElementById('cartCount');
+                        if (responseData.cartCount !== undefined) {
+                            cartCountElement.innerText = responseData.cartCount;
+                        }
+                    } catch (error) {
+                        console.error("Error parsing response:", error);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Remove from cart error:", xhr.responseText);
+                }
+            });
         }
     </script>
 </body>
