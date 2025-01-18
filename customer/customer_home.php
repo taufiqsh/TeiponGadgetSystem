@@ -127,6 +127,30 @@ $result = $stmt->get_result();
         </div>
     </div>
 
+        <!-- chatbox -->
+        <section id="chatbox-section" style="display: none;">
+        <link rel="stylesheet" href="../chatbox/chatbot.css">
+        <div id="chatbox-container">
+            <div id="chatbox">
+                <div id="chat-header">
+                    <h3>
+                        <img src="../chatbox/img/teiponBot-icon.png" alt="Logo"> KOJEK
+                    </h3>
+                    <button id="close-btn" onclick="minimizeChat()">×</button>
+                </div>
+                <div id="messages"></div>
+                <div id="input-area">
+                    <input type="text" id="userInput" class="form-control" placeholder="Type your message here...">
+                    <button id="send-btn" onclick="sendMessage()">
+                        <i class="bi bi-rocket-takeoff"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+    <button id="open-chatbox" onclick="toggleChatbox()"> </button>
+    <!-- end of chatbox -->
+
     <script>
         // Filter products using JavaScript
         document.getElementById("filterButton").addEventListener("click", function () {
