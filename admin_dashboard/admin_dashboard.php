@@ -117,7 +117,6 @@ $conn->close();
         <table class="table table-striped">
           <thead>
             <tr>
-              <th>#</th>
               <th>Order ID</th>
               <th>Date</th>
               <th>Total Amount</th>
